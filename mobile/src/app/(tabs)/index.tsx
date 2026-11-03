@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -7,16 +8,16 @@ import {
   Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../../constants/app-theme";
 import SosCard from "../../components/sos-card";
+import LiveShareBanner from "../../components/live-share-banner";
+import { loadItinerary, progress } from "../../utils/itinerary";
 
-// Placeholder values. They get replaced with real data when the
-// profile and itinerary features are built.
+// Placeholder until the profile feature is built.
 const TRAVELLER_NAME = "Traveller";
-const ITINERARY = { done: 2, total: 5 };
 
 type Tile = {
   label: string;
@@ -28,13 +29,28 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const percent = Math.round((ITINERARY.done / ITINERARY.total) * 100);
+  const [trip, setTrip] = useState({ done: 0, total: 0 });
+
+  // Refresh when coming back from the itinerary screen.
+  useFocusEffect(
+    useCallback(() => {
+      let alive = true;
+      loadItinerary().then((it) => {
+        if (alive) setTrip(progress(it));
+      });
+      return () => {
+        alive = false;
+      };
+    }, [])
+  );
+
+  const percent = trip.total === 0 ? 0 : Math.round((trip.done / trip.total) * 100);
 
   const tiles: Tile[] = [
     {
       label: "AI Travel\nAssistant",
       icon: "chatbubble-ellipses",
-      onPress: () => router.navigate("/assistant"),
+      onPress: () => router.push("/(tabs)/assistant"),
     },
     {
       label: "Live Map &\nNavigation",
@@ -49,8 +65,7 @@ export default function Home() {
     {
       label: "Your\nItinerary",
       icon: "calendar",
-      onPress: () =>
-        Alert.alert("Coming soon", "Your itinerary will live here."),
+      onPress: () => router.navigate("/itinerary"),
     },
   ];
 
@@ -91,22 +106,38 @@ export default function Home() {
       </LinearGradient>
 
       {/* Progress card, overlaps the hero */}
-      <View style={styles.progressCard}>
+      <Pressable
+        style={styles.progressCard}
+        onPress={() => router.navigate("/itinerary")}
+        accessibilityRole="button"
+        accessibilityLabel="Open your itinerary"
+      >
         <Text style={styles.cardTitle}>Your itinerary progress</Text>
-        <View style={styles.progressRow}>
-          <Text style={styles.progressText}>
-            {ITINERARY.done} / {ITINERARY.total} days completed
+        {trip.total === 0 ? (
+          <Text style={[styles.progressText, { marginTop: 12 }]}>
+            No plans yet. Tap to start your itinerary.
           </Text>
-          <Text style={styles.progressPct}>{percent}%</Text>
-        </View>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${percent}%` }]} />
-        </View>
-      </View>
+        ) : (
+          <>
+            <View style={styles.progressRow}>
+              <Text style={styles.progressText}>
+                {trip.done} / {trip.total} days completed
+              </Text>
+              <Text style={styles.progressPct}>{percent}%</Text>
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.fill, { width: `${percent}%` }]} />
+            </View>
+          </>
+        )}
+      </Pressable>
 
       {/* Emergency SOS */}
       <View style={styles.sos}>
         <SosCard />
+        <View style={styles.banner}>
+          <LiveShareBanner />
+        </View>
       </View>
 
       {/* Feature grid */}
@@ -211,6 +242,7 @@ const styles = StyleSheet.create({
   },
 
   sos: { marginHorizontal: 20, marginTop: 16 },
+  banner: { marginTop: 12 },
   
   grid: {
     flexDirection: "row",

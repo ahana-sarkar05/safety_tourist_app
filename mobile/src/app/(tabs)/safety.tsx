@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen, Card, IconBadge, SectionLabel } from "../../components/ui";
 import ContactsModal from "../../components/contacts-modal";
+import SharingCard from "../../components/sharing-card";
 import { loadContacts } from "../../utils/contacts";
 import { ZONES, ZONE_COLORS } from "../../utils/zones";
 import { theme } from "../../constants/app-theme";
@@ -35,6 +36,8 @@ export default function Safety() {
           <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
         </Card>
       </Pressable>
+
+      <SharingCard />
 
       <SectionLabel>Alert zones</SectionLabel>
       {ZONES.map((z) => (
