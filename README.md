@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🌍 Smart Tourist Safety & Travel Assistant
 
 An AI-powered mobile application designed to protect tourists, assist with navigation, provide real-time alerts, and secure traveler credentials using **Decentralized Blockchain Identity and Cryptographic Verification**.
@@ -133,6 +132,3 @@ Open [http://localhost:8081](http://localhost:8081) in your browser or scan the 
 3. **Simulate Tampering**: Tap **"Test Tamper Alert"** and watch the system flag the discrepancy. Tap **"Restore Clean ID"** to reset.
 4. **Anchor a New Permit**: Scroll down to Travel Records, tap **"+ Anchor New"**, fill out a title, and tap **"Sign & Mine into Blockchain"** to see a new block mined live.
 5. **Open Block Explorer**: Tap **"Block Explorer"** at the top right to inspect raw blocks, Merkle roots, and transactions.
-=======
-# safety_tourist_app
->>>>>>> 4faa973dcc763ccbb09c2060ae2b6f38cb7a3a20

@@ -13,19 +13,16 @@ import { Screen, Card, IconBadge } from "../../components/ui";
 import { theme } from "../../constants/app-theme";
 import {
   TouristProfile,
-  TravelRecord,
   BlockchainBlock,
   BlockchainTransaction,
   VerificationResult,
   getTouristProfile,
-  getTravelRecords,
   getBlockchainBlocks,
   getBlockchainTransactions,
   verifyTouristIdentityIntegrity,
 } from "../../utils/blockchain";
 import BlockchainIdCard from "../../components/blockchain/blockchain-id-card";
 import BlockchainVerificationPanel from "../../components/blockchain/blockchain-verification-panel";
-import TravelRecordsList from "../../components/blockchain/travel-records-list";
 import EmergencyDirectiveCard from "../../components/blockchain/emergency-directive-card";
 import BlockExplorerModal from "../../components/blockchain/block-explorer-modal";
 import EditTouristProfileModal from "../../components/blockchain/edit-profile-modal";
@@ -34,7 +31,6 @@ import { useAuth } from "../../context/auth-context";
 export default function Profile() {
   const { signOut } = useAuth();
   const [profile, setProfile] = useState<TouristProfile | null>(null);
-  const [records, setRecords] = useState<TravelRecord[]>([]);
   const [blocks, setBlocks] = useState<BlockchainBlock[]>([]);
   const [transactions, setTransactions] = useState<BlockchainTransaction[]>([]);
   const [verification, setVerification] = useState<VerificationResult | null>(null);
@@ -66,13 +62,11 @@ export default function Profile() {
   const loadData = useCallback(async () => {
     try {
       const p = await getTouristProfile();
-      const r = await getTravelRecords();
       const b = await getBlockchainBlocks();
       const t = await getBlockchainTransactions();
       const v = await verifyTouristIdentityIntegrity(p);
 
       setProfile(p);
-      setRecords(r);
       setBlocks(b);
       setTransactions(t);
       setVerification(v);
@@ -102,7 +96,7 @@ export default function Profile() {
 
   return (
     <Screen
-      title="Tourist Identity & Records"
+      title="Tourist Identity & Verification"
       subtitle="Blockchain-verified DID and credentials"
     >
       <View style={styles.actionRow}>
@@ -153,8 +147,6 @@ export default function Profile() {
       />
 
       <EmergencyDirectiveCard profile={profile} />
-
-      <TravelRecordsList records={records} onRefresh={loadData} />
 
       <TouchableOpacity onPress={() => setExplorerVisible(true)}>
         <Card style={styles.explorerCard}>

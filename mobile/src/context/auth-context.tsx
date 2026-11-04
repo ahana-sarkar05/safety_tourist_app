@@ -48,7 +48,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isOnboarded: boolean;
   signInWithGoogle: (mode?: "login" | "register") => Promise<{ success: boolean; isReturningUser: boolean }>;
-  signInWithGoogleAccount: (account: { name: string; email: string; picture?: string }) => Promise<void>;
   redirectToGoogleAuth: () => void;
   loginWithCredentials: (email: string, passwordOrPin?: string) => Promise<{ success: boolean; error?: string }>;
   signUpWithCredentials: (email: string, name: string) => Promise<void>;
@@ -115,9 +114,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const existingProfileRaw = await AsyncStorage.getItem("@tourist_profile_v1");
           if (existingProfileRaw) {
             const p = JSON.parse(existingProfileRaw);
-            p.fullName = googleUser.name;
-            await AsyncStorage.setItem("@tourist_profile_v1", JSON.stringify(p));
-            setProfile(p);
+            if (p.email && p.email.toLowerCase() === googleUser.email.toLowerCase()) {
+              setProfile(p);
+            } else {
+              const newProfile = await registerNewTouristIdentity({
+                fullName: googleUser.name,
+                nationality: "Indian",
+                passportNumber: "Z" + Math.floor(1000000 + Math.random() * 9000000) + "K",
+                dateOfBirth: "2000-01-01",
+                bloodGroup: "O+",
+                allergies: "None Reported",
+                emergencyPhone: "+91 98765 43210",
+                email: googleUser.email,
+                authProvider: "google",
+              });
+              setProfile(newProfile);
+            }
           } else {
             const newProfile = await registerNewTouristIdentity({
               fullName: googleUser.name,
@@ -325,50 +337,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithGoogleAccount = async (account: {
-    name: string;
-    email: string;
-    picture?: string;
-  }) => {
-    setIsLoading(true);
-    try {
-      const googleUser: UserSession = {
-        email: account.email.trim(),
-        name: account.name.trim() || "Google Traveler",
-        picture: account.picture,
-        authProvider: "google",
-      };
-
-      await saveSession(googleUser);
-
-      const existingProfileRaw = await AsyncStorage.getItem("@tourist_profile_v1");
-      if (existingProfileRaw) {
-        const p = JSON.parse(existingProfileRaw);
-        p.fullName = googleUser.name;
-        await AsyncStorage.setItem("@tourist_profile_v1", JSON.stringify(p));
-        setProfile(p);
-      } else {
-        const newProfile = await registerNewTouristIdentity({
-          fullName: googleUser.name,
-          nationality: "Indian",
-          passportNumber: "Z" + Math.floor(1000000 + Math.random() * 9000000) + "K",
-          dateOfBirth: "2000-01-01",
-          bloodGroup: "O+",
-          allergies: "None Reported",
-          emergencyPhone: "+91 98765 43210",
-          email: googleUser.email,
-          authProvider: "google",
-        });
-        setProfile(newProfile);
-      }
-
-      setIsOnboarded(true);
-      await AsyncStorage.setItem(ONBOARDED_STORAGE_KEY, "true");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const loginWithCredentials = async (
     email: string,
     passwordOrPin?: string
@@ -388,7 +356,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (existingProfileRaw) {
         const p = JSON.parse(existingProfileRaw);
-        setProfile(p);
+        if (p.email && p.email.toLowerCase() === cleanEmail.toLowerCase()) {
+          setProfile(p);
+        } else {
+          const newProfile = await registerNewTouristIdentity({
+            fullName: sessionData.name,
+            nationality: "Indian",
+            passportNumber: "Z" + Math.floor(1000000 + Math.random() * 9000000) + "K",
+            dateOfBirth: "2000-01-01",
+            bloodGroup: "O+",
+            allergies: "None Reported",
+            emergencyPhone: "+91 98765 43210",
+            email: sessionData.email,
+            authProvider: "tourist_credentials",
+          });
+          setProfile(newProfile);
+        }
       } else {
         const newProfile = await registerNewTouristIdentity({
           fullName: sessionData.name,
@@ -480,7 +463,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!session,
         isOnboarded,
         signInWithGoogle,
-        signInWithGoogleAccount,
         redirectToGoogleAuth,
         loginWithCredentials,
         signUpWithCredentials,

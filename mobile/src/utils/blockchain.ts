@@ -15,6 +15,7 @@ export interface TouristProfile {
   issuedAt: string;
   expiresAt: string;
   issuer: string;
+  email?: string;
 }
 
 export interface TravelRecord {
@@ -90,71 +91,17 @@ export const INITIAL_TOURIST_PROFILE: TouristProfile = {
   passportNumber: "Z9482103K",
   dateOfBirth: "1998-05-14",
   bloodGroup: "O+",
-  allergies: "Penicillin (Moderate)",
+  allergies: "None Reported",
   emergencyPhone: "+91 98765 43210",
   walletAddress: DEFAULT_WALLET.address,
   did: DEFAULT_WALLET.did,
   issuedAt: "2026-03-15",
   expiresAt: "2027-03-15",
   issuer: "National Tourism & Safety Protocol Authority",
+  email: "abida.rahman@travelsafety.io",
 };
 
-export const INITIAL_TRAVEL_RECORDS: TravelRecord[] = [
-  {
-    id: "REC-TREK-001",
-    title: "High-Altitude Eco-Zone Trekking Permit",
-    category: "Permit",
-    issuer: "Himalayan Forest & Wildlife Conservation Board",
-    issueDate: "2026-10-25",
-    expiryDate: "2026-11-10",
-    details: {
-      permitCode: "HP-WL-2026-8891",
-      zoneOrZoneArea: "Rohtang Valley / Pin Valley Eco Buffer",
-      holderName: "Abida Rahman",
-      authorizedActivities: "Trekking, Camping",
-    },
-    dataHash: "",
-    txHash: "",
-    blockNumber: 1042,
-    status: "VALID",
-  },
-  {
-    id: "REC-HERITAGE-002",
-    title: "National Heritage Digital Tourist Pass",
-    category: "Access Pass",
-    issuer: "Archaeological Survey & Tourism Federation",
-    issueDate: "2026-10-20",
-    expiryDate: "2026-11-20",
-    details: {
-      permitCode: "ARCH-ASI-7732",
-      zoneOrZoneArea: "Monuments & Protected Historical Enclaves",
-      holderName: "Abida Rahman",
-      authorizedActivities: "Priority Entry",
-    },
-    dataHash: "",
-    txHash: "",
-    blockNumber: 1043,
-    status: "VALID",
-  },
-  {
-    id: "REC-INS-003",
-    title: "International Rapid Rescue & Medical Insurance",
-    category: "Insurance",
-    issuer: "Global Travel Guard & SOS Responders",
-    issueDate: "2026-10-01",
-    expiryDate: "2026-12-31",
-    details: {
-      permitCode: "GTG-POL-992144",
-      zoneOrZoneArea: "Pan-India Travel & High Altitude Rescue",
-      holderName: "Abida Rahman",
-      coverageLimit: "₹1,000,000 Emergency Evacuation",
-    },
-    dataHash: "",
-    txHash: "",
-    blockNumber: 1044,
-    status: "VALID",
-  },
-];
+export const INITIAL_TRAVEL_RECORDS: TravelRecord[] = [];
 
 export async function initializeBlockchainState(): Promise<{
   profile: TouristProfile;
@@ -168,12 +115,47 @@ export async function initializeBlockchainState(): Promise<{
     const rawBlocks = await AsyncStorage.getItem(STORAGE_KEYS.BLOCKS);
     const rawTxs = await AsyncStorage.getItem(STORAGE_KEYS.TXS);
 
-    if (rawProfile && rawRecords && rawBlocks && rawTxs) {
+    if (rawProfile && rawBlocks && rawTxs) {
+      // Filter out any leftover mock records
+      const parsedRecords: TravelRecord[] = rawRecords ? JSON.parse(rawRecords) : [];
+      const cleanRecords = parsedRecords.filter(
+        (r) =>
+          !r.id.startsWith("REC-TREK") &&
+          !r.id.startsWith("REC-HERITAGE") &&
+          !r.id.startsWith("REC-INS")
+      );
+      if (cleanRecords.length !== parsedRecords.length || rawRecords !== JSON.stringify(cleanRecords)) {
+        await AsyncStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(cleanRecords));
+      }
+
+      // Filter out any mock record transactions
+      const parsedTxs: BlockchainTransaction[] = JSON.parse(rawTxs);
+      const cleanTxs = parsedTxs.filter(
+        (tx) =>
+          tx.type !== "RECORD_ANCHOR" ||
+          (!tx.txHash.includes("REC-TREK") &&
+            !tx.txHash.includes("REC-HERITAGE") &&
+            !tx.txHash.includes("REC-INS"))
+      );
+      if (cleanTxs.length !== parsedTxs.length) {
+        await AsyncStorage.setItem(STORAGE_KEYS.TXS, JSON.stringify(cleanTxs));
+      }
+
+      // Filter out any mock record blocks
+      const parsedBlocks: BlockchainBlock[] = JSON.parse(rawBlocks);
+      const cleanBlocks = parsedBlocks.filter((b) => {
+        if (b.blockNumber === 0 || b.blockNumber === 1041) return true;
+        return b.transactions.some((tx) => cleanTxs.some((cx) => cx.txHash === tx.txHash));
+      });
+      if (cleanBlocks.length !== parsedBlocks.length) {
+        await AsyncStorage.setItem(STORAGE_KEYS.BLOCKS, JSON.stringify(cleanBlocks));
+      }
+
       return {
         profile: JSON.parse(rawProfile),
-        records: JSON.parse(rawRecords),
-        blocks: JSON.parse(rawBlocks),
-        transactions: JSON.parse(rawTxs),
+        records: cleanRecords,
+        blocks: cleanBlocks,
+        transactions: cleanTxs,
       };
     }
 
@@ -240,53 +222,17 @@ export async function initializeBlockchainState(): Promise<{
       transactions: [idTx, emergencyTx],
     };
 
-    const records = [...INITIAL_TRAVEL_RECORDS];
-    const recordTxs: BlockchainTransaction[] = [];
-    const recordBlocks: BlockchainBlock[] = [];
-
-    records.forEach((record, idx) => {
-      const recHash = hashData(record.details);
-      const tx: BlockchainTransaction = {
-        txHash: sha256(`TX_REC_${record.id}_${idx}`),
-        blockNumber: 1042 + idx,
-        timestamp: new Date(Date.now() - (3 - idx) * 86400000).toISOString(),
-        from: "0x89D24A6b4C1185449A0b938fFFf4c718a20cD810",
-        type: "RECORD_ANCHOR",
-        did: profile.did,
-        dataHash: recHash,
-        issuer: record.issuer,
-        gasUsed: 35000,
-        status: "CONFIRMED",
-      };
-      record.dataHash = recHash;
-      record.txHash = tx.txHash;
-      record.blockNumber = tx.blockNumber;
-
-      const block: BlockchainBlock = {
-        blockNumber: tx.blockNumber,
-        timestamp: tx.timestamp,
-        previousHash: idx === 0 ? block1041.blockHash : recordBlocks[idx - 1].blockHash,
-        blockHash: sha256(`BLOCK_${tx.blockNumber}_${tx.txHash}`),
-        merkleRoot: sha256(tx.dataHash),
-        validator: "0x89D24A6b4C1185449A0b938fFFf4c718a20cD810",
-        transactions: [tx],
-      };
-
-      recordTxs.push(tx);
-      recordBlocks.push(block);
-    });
-
-    const allBlocks = [genesisBlock, block1041, ...recordBlocks];
-    const allTxs = [idTx, emergencyTx, ...recordTxs];
+    const allBlocks = [genesisBlock, block1041];
+    const allTxs = [idTx, emergencyTx];
 
     await AsyncStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
-    await AsyncStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(records));
+    await AsyncStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify([]));
     await AsyncStorage.setItem(STORAGE_KEYS.BLOCKS, JSON.stringify(allBlocks));
     await AsyncStorage.setItem(STORAGE_KEYS.TXS, JSON.stringify(allTxs));
 
     return {
       profile,
-      records,
+      records: [],
       blocks: allBlocks,
       transactions: allTxs,
     };
@@ -481,7 +427,7 @@ export async function reAnchorIdentity(profile: TouristProfile): Promise<Blockch
   const blocks = await getBlockchainBlocks();
   const txs = await getBlockchainTransactions();
 
-  const nextBlockNum = (blocks[blocks.length - 1]?.blockNumber || 1044) + 1;
+  const nextBlockNum = (blocks[blocks.length - 1]?.blockNumber || 1041) + 1;
   const identityPayload = {
     id: profile.id,
     fullName: profile.fullName,
@@ -558,7 +504,7 @@ export async function registerNewTouristIdentity(
   const txs = await getBlockchainTransactions();
   const records = await getTravelRecords();
 
-  const nextBlockNum = (blocks[blocks.length - 1]?.blockNumber || 1044) + 1;
+  const nextBlockNum = (blocks[blocks.length - 1]?.blockNumber || 1041) + 1;
   const seedString = input.email || (input.fullName + Date.now().toString());
   const walletAddress = "0x" + sha256(seedString).slice(2, 42);
   const did = `did:tourist:${walletAddress}`;
@@ -578,6 +524,7 @@ export async function registerNewTouristIdentity(
     issuedAt: new Date().toISOString().split("T")[0],
     expiresAt: new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
     issuer: "National Tourism & Safety Protocol Authority",
+    email: input.email,
   };
 
   const identityPayload = {
@@ -623,13 +570,12 @@ export async function registerNewTouristIdentity(
     status: "CONFIRMED",
   };
 
-  const updatedRecords = records.map((r) => ({
-    ...r,
-    details: {
-      ...r.details,
-      holderName: profile.fullName,
-    },
-  }));
+  const updatedRecords = records.filter(
+    (r) =>
+      !r.id.startsWith("REC-TREK") &&
+      !r.id.startsWith("REC-HERITAGE") &&
+      !r.id.startsWith("REC-INS")
+  );
 
   const prevBlock = blocks[blocks.length - 1];
   const newBlock: BlockchainBlock = {

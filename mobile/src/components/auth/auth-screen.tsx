@@ -8,46 +8,17 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../context/auth-context";
 import { theme } from "../../constants/app-theme";
 
-const GOOGLE_ACCOUNTS = [
-  {
-    name: "Abhishek Kumar Das Pattanayak",
-    email: "abhishekkumardaspattanayak444@gmail.com",
-    avatar: "A",
-    color: "#6D28D9",
-  },
-  {
-    name: "Abhishek",
-    email: "abhiseykumardaspattanayak@gmail.com",
-    avatar: "A",
-    color: "#B91C1C",
-  },
-  {
-    name: "Adyasha Mohanty",
-    email: "adyasham04@gmail.com",
-    avatar: "A",
-    color: "#9333EA",
-  },
-  {
-    name: "ABHISHEK KUMAR DAS PATTANAYAK",
-    email: "2306172@kiit.ac.in",
-    avatar: "A",
-    color: "#1E40AF",
-  },
-];
-
 export default function AuthScreen() {
   const {
     session,
     isAuthenticated,
     signInWithGoogle,
-    signInWithGoogleAccount,
     redirectToGoogleAuth,
     loginWithCredentials,
     signUpWithCredentials,
@@ -60,10 +31,6 @@ export default function AuthScreen() {
     isAuthenticated ? "onboarding" : "auth"
   );
   const [loading, setLoading] = useState(false);
-  const [showAccountChooser, setShowAccountChooser] = useState(false);
-  const [showCustomGoogle, setShowCustomGoogle] = useState(false);
-  const [customEmail, setCustomEmail] = useState("");
-  const [customName, setCustomName] = useState("");
 
   // Login & Sign-up fields
   const [email, setEmail] = useState("");
@@ -94,39 +61,15 @@ export default function AuthScreen() {
     }
   }, [isAuthenticated]);
 
-  const handleGoogleAuth = () => {
-    setShowAccountChooser(true);
-  };
-
-  const handleSelectGoogleAccount = async (acc: { name: string; email: string }) => {
-    setShowAccountChooser(false);
+  const handleGoogleAuth = async () => {
     setLoading(true);
     try {
-      await signInWithGoogleAccount(acc);
+      const res = await signInWithGoogle(activeTab);
+      if (res && res.success) {
+        // Authenticated with Google; user enters the app
+      }
     } catch (e) {
-      console.warn("Failed to sign in with Google account:", e);
-      Alert.alert("Google Sign-In", "Could not complete sign in with this account.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCustomGoogleSubmit = async () => {
-    if (!customEmail.trim() || !customEmail.includes("@")) {
-      Alert.alert("Invalid Email", "Please enter a valid Google email address.");
-      return;
-    }
-    const derivedName = customName.trim() || customEmail.split("@")[0].replace(/[._]/g, " ");
-    await handleSelectGoogleAccount({ name: derivedName, email: customEmail.trim() });
-  };
-
-  const handleLaunchBrowserOAuth = async () => {
-    setShowAccountChooser(false);
-    setLoading(true);
-    try {
-      await signInWithGoogle(activeTab);
-    } catch (e) {
-      console.warn("OAuth browser error:", e);
+      console.warn("Google auth error:", e);
     } finally {
       setLoading(false);
     }
@@ -492,138 +435,6 @@ export default function AuthScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Google Account Chooser Modal matching Google account chooser UI */}
-      <Modal
-        visible={showAccountChooser}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setShowAccountChooser(false);
-          setShowCustomGoogle(false);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.chooserCard}>
-            {/* Header */}
-            <View style={styles.chooserHeader}>
-              <View style={styles.googleIconBoxLg}>
-                <Ionicons name="logo-google" size={24} color="#EA4335" />
-              </View>
-              <Text style={styles.chooserTitle}>Choose an account</Text>
-              <Text style={styles.chooserSub}>
-                to continue to{" "}
-                <Text style={{ color: "#2563EB", fontWeight: "700" }}>
-                  placementsphere.in
-                </Text>
-              </Text>
-            </View>
-
-            {/* Account List */}
-            <ScrollView
-              style={styles.accountList}
-              showsVerticalScrollIndicator={false}
-            >
-              {GOOGLE_ACCOUNTS.map((acc, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.accountItem}
-                  onPress={() => handleSelectGoogleAccount(acc)}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[styles.avatarCircle, { backgroundColor: acc.color }]}
-                  >
-                    <Text style={styles.avatarText}>{acc.avatar}</Text>
-                  </View>
-                  <View style={styles.accountDetails}>
-                    <Text style={styles.accountName} numberOfLines={1}>
-                      {acc.name}
-                    </Text>
-                    <Text style={styles.accountEmail} numberOfLines={1}>
-                      {acc.email}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-                </TouchableOpacity>
-              ))}
-
-              {/* Use Another Account Toggle */}
-              {showCustomGoogle ? (
-                <View style={styles.customAccountBox}>
-                  <Text style={styles.customAccountLabel}>
-                    Enter Google Email:
-                  </Text>
-                  <TextInput
-                    style={styles.customInput}
-                    placeholder="e.g. user@gmail.com"
-                    placeholderTextColor="#9CA3AF"
-                    value={customEmail}
-                    onChangeText={setCustomEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-                  <TextInput
-                    style={[styles.customInput, { marginTop: 6 }]}
-                    placeholder="Full Legal Name"
-                    placeholderTextColor="#9CA3AF"
-                    value={customName}
-                    onChangeText={setCustomName}
-                  />
-                  <TouchableOpacity
-                    style={styles.confirmCustomBtn}
-                    onPress={handleCustomGoogleSubmit}
-                  >
-                    <Text style={styles.confirmCustomBtnText}>
-                      Continue with this Account
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={styles.anotherAccountRow}
-                  onPress={() => setShowCustomGoogle(true)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.anotherIconCircle}>
-                    <Ionicons
-                      name="person-add-outline"
-                      size={16}
-                      color="#4B5563"
-                    />
-                  </View>
-                  <Text style={styles.anotherAccountText}>
-                    Use another account
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </ScrollView>
-
-            {/* Launch Browser OAuth Option */}
-            <TouchableOpacity
-              style={styles.browserOAuthBtn}
-              onPress={handleLaunchBrowserOAuth}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="globe-outline" size={15} color="#2563EB" />
-              <Text style={styles.browserOAuthBtnText}>
-                Open in Web Browser (OAuth 2.0)
-              </Text>
-            </TouchableOpacity>
-
-            {/* Close Button */}
-            <TouchableOpacity
-              style={styles.closeChooserBtn}
-              onPress={() => {
-                setShowAccountChooser(false);
-                setShowCustomGoogle(false);
-              }}
-            >
-              <Text style={styles.closeChooserText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -870,161 +681,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.primary,
     fontWeight: "700",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  chooserCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    width: "100%",
-    maxWidth: 420,
-    padding: 22,
-    maxHeight: "85%",
-    ...theme.shadow,
-  },
-  chooserHeader: {
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  googleIconBoxLg: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#FEE2E2",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  chooserTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#1F2937",
-  },
-  chooserSub: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginTop: 4,
-  },
-  accountList: {
-    maxHeight: 300,
-  },
-  accountItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-    gap: 12,
-  },
-  avatarCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  accountDetails: {
-    flex: 1,
-  },
-  accountName: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#1F2937",
-  },
-  accountEmail: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginTop: 2,
-  },
-  anotherAccountRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    gap: 12,
-    marginTop: 4,
-  },
-  anotherIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  anotherAccountText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#374151",
-  },
-  customAccountBox: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 10,
-  },
-  customAccountLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#374151",
-    marginBottom: 6,
-  },
-  customInput: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 13,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    color: "#1F2937",
-  },
-  confirmCustomBtn: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  confirmCustomBtnText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  browserOAuthBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 11,
-    borderRadius: 12,
-    backgroundColor: "#EFF6FF",
-    marginTop: 14,
-    gap: 8,
-  },
-  browserOAuthBtnText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#2563EB",
-  },
-  closeChooserBtn: {
-    paddingVertical: 12,
-    alignItems: "center",
-    marginTop: 6,
-  },
-  closeChooserText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#6B7280",
   },
 });
