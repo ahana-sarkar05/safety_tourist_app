@@ -42,7 +42,7 @@ export default function Home() {
       onPress: () => router.navigate("/map"),
     },
     {
-      label: "Safety\nAlerts",
+      label: "Safety\nScore & Alerts",
       icon: "shield-checkmark",
       onPress: () => router.navigate("/safety"),
     },
@@ -103,6 +103,28 @@ export default function Home() {
           <View style={[styles.fill, { width: `${percent}%` }]} />
         </View>
       </View>
+
+      {/* Live AI Safety Score Banner */}
+      <Pressable
+        onPress={() => router.navigate("/safety")}
+        style={styles.safetyBanner}
+      >
+        <View style={styles.safetyBadge}>
+          <Ionicons name="shield-checkmark" size={24} color="#2E7D32" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text style={styles.safetyTitle}>India Safety Radar</Text>
+            <View style={styles.safeTag}>
+              <Text style={styles.safeTagText}>LIVE</Text>
+            </View>
+          </View>
+          <Text style={styles.safetySub}>
+            Real-time AI safety score across all Indian cities & landmarks
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
+      </Pressable>
 
       {/* Emergency SOS */}
       <View style={styles.sos}>
@@ -210,8 +232,33 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
   },
 
+  safetyBanner: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    padding: 14,
+    backgroundColor: "#F1F8E9",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#C5E1A5",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  safetyBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  safetyTitle: { fontSize: 16, fontWeight: "800", color: "#1B5E20" },
+  safeTag: { backgroundColor: "#2E7D32", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  safeTagText: { color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
+  safetySub: { fontSize: 12, color: "#558B2F", marginTop: 2 },
+
   sos: { marginHorizontal: 20, marginTop: 16 },
-  
+
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
