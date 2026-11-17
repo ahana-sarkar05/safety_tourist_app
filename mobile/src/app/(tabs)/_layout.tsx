@@ -17,6 +17,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="profile" />
       {/* Real screen, opened from the Home card, hidden from the tab bar */}
       <Tabs.Screen name="assistant" options={{ href: null }} />
+      <Tabs.Screen name="itinerary" options={{ href: null }} />
     </Tabs>
   );
 }

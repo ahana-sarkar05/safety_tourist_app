@@ -1,0 +1,6 @@
+# Runtime data: contains personal details and secrets. Never commit.
+sessions.json
+identities.json
+secret.key
+*.tmp
+node_modules/

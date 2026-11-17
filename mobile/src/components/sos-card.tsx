@@ -11,15 +11,19 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../constants/app-theme";
 import { useLocation } from "../context/location-context";
+import { useLiveShare } from "../context/live-share-context";
 import { loadContacts } from "../utils/contacts";
+import {
+  DEFAULT_DURATION_MIN,
+  formatDuration,
+  loadDuration,
+} from "../utils/sharing-settings";
 import { sendSOS } from "../utils/sos";
 
 // Seconds to wait (with a big Cancel button) before the SOS goes out.
 // This stops a tap in your pocket from alarming your family.
 // Set it to 0 if you want the SOS to send the instant you tap.
 const COUNTDOWN_SECONDS = 3;
-
-const AMBER = "#D98A1F";
 
 type Phase =
   | { kind: "idle" }
@@ -28,12 +32,20 @@ type Phase =
 export default function SosCard() {
   const router = useRouter();
   const { location, accuracy } = useLocation();
+  const live = useLiveShare();
 
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [contactCount, setContactCount] = useState<number | null>(null);
+  const [durationMin, setDurationMin] = useState(DEFAULT_DURATION_MIN);
 
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const hereRef = useRef({ coord: location, accuracy });
+  const durationRef = useRef(DEFAULT_DURATION_MIN);
+  const liveRef = useRef(live);
+
+  useEffect(() => {
+    liveRef.current = live;
+  }, [live]);
 
   useEffect(() => {
     hereRef.current = { coord: location, accuracy };
@@ -45,6 +57,11 @@ export default function SosCard() {
       let alive = true;
       loadContacts().then((c) => {
         if (alive) setContactCount(c.length);
+      });
+      loadDuration().then((m) => {
+        if (!alive) return;
+        durationRef.current = m;
+        setDurationMin(m);
       });
       return () => {
         alive = false;
@@ -68,6 +85,10 @@ const send = useCallback(async () => {
 
   await sendSOS({
     fallback: hereRef.current.coord,
+    fallbackAccuracy: hereRef.current.accuracy,
+    durationMin: durationRef.current,
+    share: (coord, acc, minutes) => liveRef.current.start(coord, acc, minutes),
+    onCancelled: () => void liveRef.current.stop(),
     onNeedContacts: () => router.navigate("/safety"),
   });
 }, [clearTimer, router]);
@@ -99,11 +120,6 @@ const send = useCallback(async () => {
     setPhase({ kind: "idle" });
   };
 
-  const goAddContacts = () => {
-    dismiss();
-    router.navigate("/safety");
-  };
-
   const noContacts = contactCount === 0;
 
   return (
@@ -122,7 +138,7 @@ const send = useCallback(async () => {
           <Text style={styles.sub}>
             {noContacts
               ? "Add a contact first so we know who to alert."
-              : "Tap to alert your emergency contacts with your live location."}
+              : `Tap to alert your contacts and share your live location for ${formatDuration(durationMin)}.`}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#6B4A3E" />
@@ -141,8 +157,9 @@ const send = useCallback(async () => {
                 <Text style={styles.kicker}>Sending SOS in</Text>
                 <Text style={styles.count}>{phase.left}</Text>
                 <Text style={styles.hint}>
-                  Your contacts will get your location. Tap Cancel if this was
-                  a mistake.
+                  Your contacts will get a link to follow your live location
+                  for {formatDuration(durationMin)}. Tap Cancel if this was a
+                  mistake.
                 </Text>
                 <View style={styles.row}>
                   <ModalButton grow label="Cancel" tone="outline" onPress={dismiss} />
@@ -154,20 +171,6 @@ const send = useCallback(async () => {
         </View>
       </Modal>
     </>
-  );
-}
-
-function Badge({
-  icon,
-  color,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-}) {
-  return (
-    <View style={[styles.badge, { backgroundColor: `${color}22` }]}>
-      <Ionicons name={icon} size={38} color={color} />
-    </View>
   );
 }
 

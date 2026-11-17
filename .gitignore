@@ -19,6 +19,7 @@ __pycache__/
 *.log
 *.db-wal
 *.db-shm
+*.db
 
 # Expo / React Native
 .expo/

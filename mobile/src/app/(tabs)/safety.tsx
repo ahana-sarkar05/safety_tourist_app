@@ -12,7 +12,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Screen, Card, IconBadge, SectionLabel } from "../../components/ui";
 import ContactsModal from "../../components/contacts-modal";
+import SharingCard from "../../components/sharing-card";
 import { loadContacts } from "../../utils/contacts";
+import { ZONES, ZONE_COLORS } from "../../utils/zones";
 import { theme } from "../../constants/app-theme";
 import {
   fetchSafetyScore,
@@ -246,6 +248,26 @@ export default function Safety() {
         </Card>
       </Pressable>
 
+      <SharingCard />
+
+      <SectionLabel>Alert zones</SectionLabel>
+      {ZONES.map((zone) => (
+        <Card key={zone.id} style={styles.incidentCard}>
+          <View style={styles.incidentTop}>
+            <IconBadge
+              name="warning"
+              bg={ZONE_COLORS[zone.type].fill}
+              color={ZONE_COLORS[zone.type].stroke}
+            />
+            <Text style={[styles.zoneType, { color: ZONE_COLORS[zone.type].stroke }]}>
+              {zone.type.toUpperCase()} · {zone.radius} m radius
+            </Text>
+          </View>
+          <Text style={styles.cardTitle}>{zone.name}</Text>
+          <Text style={styles.cardSub}>{zone.message}</Text>
+        </Card>
+      ))}
+
       {/* Place Selection Chips */}
       <SectionLabel>Check Location Safety Score</SectionLabel>
       <View style={styles.chipsRow}>
@@ -301,7 +323,7 @@ export default function Safety() {
           <Text style={styles.loadingText}>Calculating real-time safety metrics...</Text>
         </Card>
       ) : scoreData ? (
-        <Card style={[styles.scoreCard, { borderColor: colors.border }]}>
+        <Card style={{ ...styles.scoreCard, borderColor: colors.border }}>
           <View style={styles.scoreHeader}>
             <View style={{ flex: 1 }}>
               <Text style={styles.scorePlace}>{scoreData.place_name || selectedPlace}</Text>
@@ -484,6 +506,7 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   cardTitle: { fontSize: 16, fontWeight: "700", color: theme.colors.ink },
   cardSub: { color: theme.colors.muted, marginTop: 2, fontSize: 13 },
+  zoneType: { fontSize: 11, fontWeight: "700", marginLeft: "auto" },
 
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
   chip: {
