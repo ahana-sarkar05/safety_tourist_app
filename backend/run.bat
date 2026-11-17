@@ -1,6 +1,10 @@
 @echo off
-echo Starting Tourist Safety App...
+echo ========================================================
+echo  Starting Trevora Backend (FastAPI + AI + Safety)
+echo ========================================================
 cd /d "%~dp0"
-call .venv\Scripts\activate.bat
+if exist .venv\Scripts\activate.bat (
+    call .venv\Scripts\activate.bat
+)
 python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 pause

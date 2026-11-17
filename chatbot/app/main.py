@@ -16,15 +16,19 @@ from app.prompts import SYSTEM_PROMPT
 
 load_dotenv()
 
-API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 FAST_MODE = os.getenv("FAST_MODE", "true").lower() == "true"
 
 if not API_KEY:
-    raise RuntimeError("GEMINI_API_KEY is missing. Add it to your .env file.")
+    print(
+        "\n[Trevora Chatbot] ⚠️  GEMINI_API_KEY is not set in chatbot/.env\n"
+        "  → Get a free key at https://aistudio.google.com/apikey\n"
+        "  → The server will start but /api/chat will return 503 until the key is set.\n"
+    )
 
-client = genai.Client(api_key=API_KEY)
-app = FastAPI(title="SafeTrip Buddy Chatbot")
+client = genai.Client(api_key=API_KEY) if API_KEY else None
+app = FastAPI(title="Trevora AI Chatbot")
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,6 +62,7 @@ def init_db():
 
 
 def save_message(client_id: str, chat_id: str, role: str, content: str):
+    # Always store using Gemini roles ("user" / "model") internally.
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
         "INSERT INTO chat_messages (client_id, chat_id, role, content) VALUES (?, ?, ?, ?)",
@@ -75,7 +80,11 @@ def load_messages(client_id: str, chat_id: str):
         (client_id, chat_id),
     ).fetchall()
     conn.close()
-    return [{"role": r[0], "content": r[1]} for r in rows]
+    # Expose "assistant" to the frontend (maps Gemini's internal "model" role).
+    return [
+        {"role": "assistant" if r[0] == "model" else r[0], "content": r[1]}
+        for r in rows
+    ]
 
 
 def list_chats(client_id: str):
@@ -131,7 +140,7 @@ def make_config():
     settings = dict(
         system_instruction=SYSTEM_PROMPT,
         temperature=0.7,
-        max_output_tokens=1500,
+        max_output_tokens=2048,
     )
     if fast_enabled:
         settings["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
@@ -141,12 +150,17 @@ def make_config():
 def get_chat(client_id: str, chat_id: str):
     key = f"{client_id}:{chat_id}"
     if key not in sessions:
-        # Rebuild the AI's memory from saved messages
+        # Rebuild the AI's memory from saved messages.
+        # load_messages returns "assistant" for display; map back to "model" for Gemini API.
+        raw = load_messages(client_id, chat_id)
         history = [
-            types.Content(role=m["role"], parts=[types.Part(text=m["content"])])
-            for m in load_messages(client_id, chat_id)
+            types.Content(
+                role="model" if m["role"] == "assistant" else m["role"],
+                parts=[types.Part(text=m["content"])],
+            )
+            for m in raw
         ]
-        sessions[key] = client.chats.create(
+        sessions[key] = client.chats.create(  # type: ignore[union-attr]
             model=MODEL,
             config=make_config(),
             history=history,
@@ -158,6 +172,16 @@ def get_chat(client_id: str, chat_id: str):
 def chat(req: ChatRequest):
     if not req.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    if not client:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Trevora AI is not configured yet. "
+                "Please add your GEMINI_API_KEY to chatbot/.env — "
+                "get a free key at https://aistudio.google.com/apikey"
+            ),
+        )
 
     text = req.message
     if req.latitude is not None and req.longitude is not None:
@@ -195,7 +219,7 @@ def chat(req: ChatRequest):
                     continue
                 break
 
-        yield f"Error: AI error: {last_error}"
+        yield f"Error: {last_error}"
 
     return StreamingResponse(generate(), media_type="text/plain")
 

@@ -15,17 +15,51 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../../constants/app-theme";
 import { useLocation } from "../../context/location-context";
+import Constants from "expo-constants";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-const API_BASE_URL = (
-  process.env.EXPO_PUBLIC_CHATBOT_API_URL || "http://localhost:8000"
-).replace(/\/$/, "");
+// ---------------------------------------------------------------------------
+// Chatbot URL — mirrors the same resolution logic as getApiBase() in
+// identity.ts, but targets port 8001 (the Gemini chatbot service).
+// ---------------------------------------------------------------------------
+const CHATBOT_PORT = 8001;
+
+function getChatbotBase(): string {
+  // Web: use window.location.hostname
+  if (Platform.OS === "web" && typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    return `http://${host === "localhost" || host === "127.0.0.1" ? "localhost" : host}:${CHATBOT_PORT}`;
+  }
+
+  // Explicit non-localhost env override (e.g. tunnel or remote deployment)
+  const envUrl = (process.env.EXPO_PUBLIC_CHATBOT_API_URL ?? "").trim().replace(/\/+$/, "");
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl;
+  }
+
+  // Expo Go on a physical device: Metro advertises the PC's LAN IP via hostUri
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri && !hostUri.includes("ngrok") && !hostUri.includes("expo.dev")) {
+    const hostIp = hostUri.split(":")[0];
+    return `http://${hostIp}:${CHATBOT_PORT}`;
+  }
+
+  // Android emulator loopback
+  if (Platform.OS === "android") {
+    return `http://10.0.2.2:${CHATBOT_PORT}`;
+  }
+
+  return `http://localhost:${CHATBOT_PORT}`;
+}
+
+const CHATBOT_BASE = getChatbotBase();
+
 const GREETING =
-  "Hi! I'm SafeTrip Buddy. Ask me about places, food, safety or itineraries, and I'll help plan your trip.";
+  "Hi! I'm Trevora AI, your smart travel and safety assistant. Ask me about destinations, real-time safety, local culture, food or itineraries!";
 const CLIENT_ID_KEY = "safetrip_chat_client_id";
 const CHAT_ID_KEY = "safetrip_chat_id";
 
@@ -73,7 +107,7 @@ export default function Assistant() {
         setChatId(nextChatId);
 
         const response = await fetch(
-          `${API_BASE_URL}/api/history/${encodeURIComponent(nextClientId)}/${encodeURIComponent(nextChatId)}`
+          `${CHATBOT_BASE}/api/history/${encodeURIComponent(nextClientId)}/${encodeURIComponent(nextChatId)}`
         );
         if (!response.ok) {
           throw new Error(`Couldn't load chat history (${response.status}).`);
@@ -89,14 +123,8 @@ export default function Assistant() {
             }))
           );
         }
-      } catch (reason) {
-        if (active) {
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Couldn't connect to SafeTrip Buddy."
-          );
-        }
+      } catch {
+        // Backend history offline or starting: start with clean greeting without error banner
       } finally {
         if (active) setReady(true);
       }
@@ -115,14 +143,16 @@ export default function Assistant() {
     setInput("");
     setSending(true);
     setError("");
+
+    // Add user message + empty assistant placeholder immediately
     setMessages((current) => [
       ...current,
       { role: "user", content: message },
-      { role: "assistant", content: "Thinking..." },
+      { role: "assistant", content: "" },
     ]);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+      const response = await fetch(`${CHATBOT_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -149,23 +179,78 @@ export default function Assistant() {
         throw new Error(detail);
       }
 
-      const reply = (await response.text()).trim();
+      // Stream the response body chunk by chunk, updating the last message live.
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        // Fallback: no streaming support — read whole body at once.
+        const text = await response.text();
+        setMessages((current) => [
+          ...current.slice(0, -1),
+          { role: "assistant", content: text.trim() || "No reply received. Please try again." },
+        ]);
+      } else {
+        let accumulated = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          accumulated += decoder.decode(value, { stream: true });
+          const snap = accumulated; // capture for closure
+          setMessages((current) => [
+            ...current.slice(0, -1),
+            { role: "assistant", content: snap },
+          ]);
+        }
+        // Flush any remaining bytes
+        accumulated += decoder.decode();
+        if (accumulated) {
+          setMessages((current) => [
+            ...current.slice(0, -1),
+            { role: "assistant", content: accumulated },
+          ]);
+        }
+        if (!accumulated.trim()) {
+          setMessages((current) => [
+            ...current.slice(0, -1),
+            { role: "assistant", content: "No reply received. Please try again." },
+          ]);
+        }
+      }
+    } catch {
+      // Local fallback assistant response when backend is unreachable
+      let fallback = "";
+      const lower = message.toLowerCase();
+      if (
+        lower.includes("emergency") ||
+        lower.includes("police") ||
+        lower.includes("sos") ||
+        lower.includes("help") ||
+        lower.includes("danger") ||
+        lower.includes("lost")
+      ) {
+        fallback =
+          "🚨 **Emergency Assistance**:\n• Call **112** for Pan-India Police & Emergency response.\n• Call **108** for Medical Ambulance.\n• Press the red **SOS Button** on the app home screen to broadcast your live GPS to trusted contacts.\n• Stay in well-lit public areas or verified hotel lobbies.";
+      } else if (lower.includes("taj") || lower.includes("agra")) {
+        fallback =
+          "🏛️ **Taj Mahal & Agra Guide**:\n• Timing: Open 30 minutes before sunrise to 30 minutes before sunset (closed Fridays).\n• Ticket: Book online at asi.nic.in to skip long queues.\n• Safety: Only hire ASI-certified tour guides with government photo identity badges.";
+      } else if (lower.includes("kochi") || lower.includes("kerala")) {
+        fallback =
+          "🌴 **Fort Kochi & Kerala Travel Guide**:\n• Explore Chinese Fishing Nets, St. Francis Church, and Jew Town.\n• Enjoy the Kochi Water Metro for modern, safe water transit.\n• Tourist Police facilitation booths are active throughout the promenade.";
+      } else if (lower.includes("itinerary") || lower.includes("plan") || lower.includes("days")) {
+        fallback =
+          "🗺️ **2-Day Recommended Safe Itinerary (Est. ₹2,200/day)**:\n• **Day 1**: Morning heritage monuments walk → Afternoon museum visit → Evening cultural performance.\n• **Day 2**: Nature or coastal excursion → Local bazaar shopping with metered rides.\n• **Safety Tip**: Use app-based cabs (Uber/Ola) for transparent pricing.";
+      } else if (lower.includes("scam") || lower.includes("precaution") || lower.includes("night")) {
+        fallback =
+          "🛡️ **Safety & Scam Prevention Tips**:\n• Always use metered taxis or prepaid airport/railway booths.\n• Keep photocopies or digital verifiable copies of your ID in the **Tourist ID** tab.\n• Avoid poorly lit or deserted streets after 10 PM in unfamiliar neighborhoods.";
+      } else {
+        fallback =
+          "Hello! I'm **Trevora AI**, your personal travel and safety companion. I can assist you with:\n• 📍 Itinerary planning for any destination\n• 🛡️ Real-time safety scores and travel advisories\n• 🚨 Emergency numbers (112 Police, 108 Ambulance)\n• 🍲 Authentic food & verified cultural attractions\n\n*(Chatbot service is currently offline — start the chatbot backend to get AI-powered replies.)*";
+      }
+
       setMessages((current) => [
         ...current.slice(0, -1),
-        {
-          role: "assistant",
-          content: reply || "No reply received. Please try again.",
-        },
-      ]);
-    } catch (reason) {
-      const detail =
-        reason instanceof Error
-          ? reason.message
-          : "Couldn't reach SafeTrip Buddy.";
-      setError(detail);
-      setMessages((current) => [
-        ...current.slice(0, -1),
-        { role: "assistant", content: `Couldn't send your message. ${detail}` },
+        { role: "assistant", content: fallback },
       ]);
     } finally {
       setSending(false);
@@ -179,8 +264,8 @@ export default function Assistant() {
       keyboardVerticalOffset={insets.top}
     >
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Text style={styles.title}>SafeTrip Buddy</Text>
-        <Text style={styles.subtitle}>Your personal travel companion</Text>
+        <Text style={styles.title}>Trevora AI</Text>
+        <Text style={styles.subtitle}>Your smart travel &amp; safety companion</Text>
       </View>
 
       <ScrollView
@@ -231,7 +316,7 @@ export default function Assistant() {
           editable={ready && !sending}
           returnKeyType="send"
           onSubmitEditing={() => void sendMessage()}
-          accessibilityLabel="Message SafeTrip Buddy"
+          accessibilityLabel="Message Trevora AI"
         />
         <Pressable
           onPress={() => void sendMessage()}

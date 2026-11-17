@@ -64,7 +64,7 @@ export default function TouristIdScreen() {
   const revoked = status === "revoked";
 
   const share = async () => {
-    const message = `My Digital Tourist ID: ${p.touristId}\nYou can verify it in the Tourist Safety app.`;
+    const message = `My Digital Tourist ID: ${p.touristId}\nYou can verify it in the Trevora app.`;
     try {
       await Share.share({ message });
     } catch {

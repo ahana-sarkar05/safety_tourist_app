@@ -9,8 +9,14 @@ In any report, describe output as a "risk estimate", not a guarantee.
 """
 import numpy as np
 import pandas as pd
-import lightgbm as lgb
-import shap
+try:
+    import lightgbm as lgb
+except ImportError:
+    lgb = None
+try:
+    import shap
+except ImportError:
+    shap = None
 import joblib
 from pathlib import Path
 from sklearn.model_selection import GroupShuffleSplit
@@ -91,6 +97,8 @@ def train(df: pd.DataFrame):
     tr, te = df.iloc[tr_idx], df.iloc[te_idx]
 
     try:
+        if lgb is None:
+            raise ImportError("lightgbm is not installed")
         model = lgb.LGBMRegressor(
             n_estimators=400, learning_rate=0.05, num_leaves=31,
             subsample=0.8, colsample_bytree=0.8, random_state=42, verbose=-1,

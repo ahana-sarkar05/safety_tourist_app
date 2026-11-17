@@ -1,14 +1,52 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import type { Coord } from "./distance";
 
-// Where the tracker server lives (see /tracker). Set EXPO_PUBLIC_TRACKER_URL in
-// .env, e.g. https://sos-tracker.onrender.com. Without it, SOS still works but
-// contacts only get a one-time location.
-const BASE = (process.env.EXPO_PUBLIC_TRACKER_URL ?? "").trim().replace(/\/+$/, "");
-export const liveShareConfigured = BASE.length > 0;
+// Tracker server port. The main API (FastAPI) is on 8000; tracker is on 8080.
+const TRACKER_PORT = 8080;
+
+/**
+ * Resolves the tracker base URL at runtime, mirroring how identity.ts resolves
+ * the API URL. Priority:
+ *  1. EXPO_PUBLIC_TRACKER_URL env var (if set to a non-localhost address)
+ *  2. Expo Metro hostUri LAN IP  → used when running on a physical device via Expo Go
+ *  3. Android emulator loopback  → 10.0.2.2:8080
+ *  4. localhost fallback         → web / iOS simulator
+ */
+function getTrackerBase(): string {
+  // Web: use window.location.hostname so the web preview works
+  if (Platform.OS === "web" && typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    return `http://${host === "localhost" || host === "127.0.0.1" ? "localhost" : host}:${TRACKER_PORT}`;
+  }
+
+  // If the user has set an explicit non-localhost URL (e.g. a tunnel or remote server), use it.
+  const envUrl = (process.env.EXPO_PUBLIC_TRACKER_URL ?? "").trim().replace(/\/+$/, "");
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl;
+  }
+
+  // On a physical device running under Expo Go, Metro advertises the PC's LAN IP via hostUri.
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri && !hostUri.includes("ngrok") && !hostUri.includes("expo.dev")) {
+    const hostIp = hostUri.split(":")[0];
+    return `http://${hostIp}:${TRACKER_PORT}`;
+  }
+
+  // Android emulator: 10.0.2.2 routes to the host PC's localhost.
+  if (Platform.OS === "android") {
+    return `http://10.0.2.2:${TRACKER_PORT}`;
+  }
+
+  // iOS simulator / web / fallback
+  return `http://localhost:${TRACKER_PORT}`;
+}
+
+const BASE = getTrackerBase();
+export const liveShareConfigured = true;
 
 export type LiveSession = {
   id: string;

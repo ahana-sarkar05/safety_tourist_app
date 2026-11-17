@@ -18,7 +18,11 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-_DB_PATH = Path(__file__).resolve().parents[1] / os.getenv("DB_PATH", "data/places.db")
+_db_env = os.getenv("DB_PATH", "data/places.db")
+if _db_env == ":memory:":
+    _DB_PATH = ":memory:"
+else:
+    _DB_PATH = Path(__file__).resolve().parents[1] / _db_env
 _conn: sqlite3.Connection | None = None
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
@@ -27,10 +31,16 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 def get_db() -> sqlite3.Connection:
     global _conn
     if _conn is None:
-        _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        _conn = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA journal_mode=WAL")
+        if _DB_PATH == ":memory:":
+            _conn = sqlite3.connect(":memory:", check_same_thread=False)
+            _conn.row_factory = sqlite3.Row
+            _conn.executescript(DDL)
+            init_db()
+        else:
+            _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+            _conn = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
+            _conn.row_factory = sqlite3.Row
+            _conn.execute("PRAGMA journal_mode=WAL")
         _conn.execute("PRAGMA foreign_keys=ON")
     return _conn
 
@@ -44,6 +54,29 @@ def close_db():
 
 # ── Schema ────────────────────────────────────────────────────────────────────
 DDL = """
+CREATE TABLE IF NOT EXISTS users (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    tourist_id   TEXT NOT NULL UNIQUE,
+    email        TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    password_hash TEXT NOT NULL,
+    full_name    TEXT NOT NULL,
+    nationality  TEXT NOT NULL DEFAULT '',
+    phone        TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'verified',
+    created_at   TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    token      TEXT PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
 CREATE TABLE IF NOT EXISTS places (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
@@ -110,7 +143,10 @@ def _overpass_fetch(query: str) -> list:
 
 
 def seed_places_from_osm():
-    import h3 as h3lib
+    try:
+        import h3 as h3lib
+    except ImportError:
+        h3lib = None
 
     place   = os.getenv("REGION_NAME",   "Ernakulam")
     al      = os.getenv("ADMIN_LEVEL",   "5")
@@ -155,7 +191,7 @@ out center tags;
             tags.get("tourism") or tags.get("historic") or
             tags.get("leisure") or tags.get("amenity") or "place"
         )
-        h3_cell = h3lib.latlng_to_cell(lat, lon, h3_res)
+        h3_cell = h3lib.latlng_to_cell(lat, lon, h3_res) if h3lib else ""
         osm_id  = f"{e.get('type','n')}{e.get('id', '')}"
         wikidata = tags.get("wikidata", "")
 
@@ -232,11 +268,14 @@ def _seed_fallback_places():
         ("Kamakhya Temple, Guwahati",  26.1664, 91.7054, "spiritual",  "Sacred hilltop temple dedicated to mother goddess Kamakhya"),
     ]
     db = get_db()
-    import h3 as h3lib
+    try:
+        import h3 as h3lib
+    except ImportError:
+        h3lib = None
     h3_res = int(os.getenv("H3_RES", "8"))
     for name, lat, lon, cat, desc in fallback:
         try:
-            h3_cell = h3lib.latlng_to_cell(lat, lon, h3_res)
+            h3_cell = h3lib.latlng_to_cell(lat, lon, h3_res) if h3lib else ""
         except Exception:
             h3_cell = ""
         db.execute(

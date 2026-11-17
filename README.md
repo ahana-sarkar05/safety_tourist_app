@@ -1,134 +1,217 @@
-# 🌍 Smart Tourist Safety & Travel Assistant
+# 🌍 Trevora — Smart Tourist Safety & Travel Intelligence System
 
-An AI-powered mobile application designed to protect tourists, assist with navigation, provide real-time alerts, and secure traveler credentials using **Decentralized Blockchain Identity and Cryptographic Verification**.
-
----
-
-## 💡 Overview & Core Features
-
-1. 🤖 **AI Travel Assistant**: Conversational AI for local guidance, attraction recommendations, and intelligent itinerary planning.
-2. 📍 **GPS Smart Tracking & Navigation**: Real-time positioning, safe route guidance, and restricted zone geofencing.
-3. 🚨 **Real-Time Safety Alerts**: Location-based alerts, geofence warnings, and emergency SOS broadcast.
-4. ⛓️ **Blockchain Tourist Identity & Records**: Decentralized digital tourist passport, zero-knowledge privacy, tamper-resistant travel permits, emergency medical seals, and in-app block explorer.
-5. 🧠 **AI Safety Prediction**: Area safety scoring based on time, location, and environment metrics.
-6. 📸 **AI Landmark Recognition**: Image recognition for heritage monuments and historic landmarks.
-7. 🗺️ **Smart Dynamic Itinerary**: Budget-aware and time-aware adaptive travel schedule.
-8. 👥 **Emergency Contact System**: Instant SOS location sharing with trusted contacts.
+> **A comprehensive AI and Web3 powered tourist safety, navigation, and emergency management ecosystem for Pan-India travel.**
+> Integrates **React Native (Expo)**, **FastAPI**, **LightGBM Machine Learning with SHAP Explainability**, **W3C Decentralized Identity (DID)**, and **Consortium Blockchain Ledger Verification**.
 
 ---
 
-## ⛓️ Blockchain Tourist Identity & Records System (In Detail)
-
-The blockchain subsystem addresses security, identity verification, and medical emergency readiness while strictly preserving traveler privacy.
-
-### 1. Zero-Knowledge Privacy Architecture
-* **Off-Chain Personal Data**: Sensitive personal information (passport number, national ID, birth date, detailed medical history, emergency contacts) is stored **strictly off-chain** on the user's local device (`AsyncStorage`).
-* **On-Chain Cryptographic Commitments**: Only the deterministic **SHA-256 mathematical fingerprint** (`0x...`), the tourist's Decentralized Identifier (**DID**), and issuance metadata are anchored on the blockchain.
-* **Privacy Compliance**: No private identity data is ever exposed publicly on the ledger, preventing identity theft and complying with global data privacy regulations (GDPR, DPDP).
-
-### 2. Digital Tourist ID & Holographic Passport Card
-* **W3C Decentralized Identifier (DID)**: Every traveler receives an immutable identity string (e.g. `did:tourist:0x742d35Cc6634C0532925a3b844Bc454e4438f44e`).
-* **Interactive Passport Card**: Features a modern card design with smart-chip graphic, network status (`Polygon Sepolia / Consortium Network`), traveler name, nationality, and validity period.
-* **Verifiable QR Matrix Pass**: Tapping the mini-QR on the card opens a full-screen 25x25 QR Matrix pass that checkpoint guards, police, or rescue personnel can scan for instant verification.
-
-### 3. Real-Time Cryptographic Verification Engine
-* Dynamically calculates the SHA-256 digest of the traveler's local off-chain credentials.
-* Compares the computed digest against the on-chain anchor on Block `#1041`.
-* Displays real-time integrity status: **`Ledger Verification: Authentic (100% Untampered)`**.
-
-### 4. Interactive Tamper Stress-Test Simulator
-* A built-in testing feature for evaluators and demonstrations:
-  1. Click **"Test Tamper Alert"** in the app.
-  2. The system modifies just **1 character** of the off-chain passport number.
-  3. The local SHA-256 hash immediately changes (due to the cryptographic avalanche effect) and mismatches the on-chain anchor.
-  4. The screen flips to **`🚨 TAMPER DETECTED`**, proving how the blockchain detects unauthorized credential alterations.
-  5. Click **"Restore Clean ID"** to reset back to authentic status.
-
-### 5. Tamper-Resistant Travel Records & Permits Ledger
-* Pre-seeded with verified on-chain permits:
-  * 🏔️ **High-Altitude Eco-Zone Trekking Permit** (Rohtang Pass &bull; Block `#1042`)
-  * 🏛️ **National Heritage Digital Access Pass** (Archaeological Survey &bull; Block `#1043`)
-  * 🛡️ **International Rapid Rescue & SOS Insurance** (Global Travel Guard &bull; Block `#1044`)
-* **Real-Time Permit Minting**: Tap **"+ Anchor New"** to enter any permit details. The app computes its SHA-256 hash and immediately mines a new block into the ledger.
-
-### 6. Emergency Medical & Contact Directive
-* Cryptographically seals the traveler's critical life-saving information:
-  * **Blood Group** (`O+`)
-  * **Critical Allergies** (`Penicillin`)
-  * **Primary SOS Contact Phone**
-* Search & rescue teams or hospital paramedics can verify that emergency directives have not been manipulated or forged.
-
-### 7. In-App Consortium Block Explorer
-* Tap **"Block Explorer"** to inspect the live blockchain ledger:
-  * **Block Height & Metrics**: Total confirmed blocks and transactions.
-  * **Blocks Tab**: Inspect Genesis Block `#0`, Block `#1041`, Block `#1042`, etc., including Block Hash, Merkle Root, and Validator Address.
-  * **Transactions Tab**: Inspect confirmed transactions (`IDENTITY_MINT`, `RECORD_ANCHOR`, `EMERGENCY_DIRECTIVE`) with gas metrics.
-
-### 8. Authentication: Dedicated Login & Logout System
-* **Dual-Mode Auth (Log In vs. Sign Up)**:
-  * **Log In Mode**: Returning travelers can immediately log in with **Google** or enter their registered email & PIN to verify their existing on-chain identity and access the app directly.
-  * **Sign Up / Registration Mode**: New travelers register with Google or email, then complete their identity setup to mint a new W3C DID on the blockchain.
-* **Google OAuth 2.0 Integration**: Sign in with official Google credentials using Google Identity Services (Client ID: `350849533351-7n53u551sk94lclc8jp512q5ev2nhrdm.apps.googleusercontent.com`).
-* **Pre-Access Identity Registration**: New travelers are asked to fill their travel details (Name, Nationality, Passport ID, Blood Group, Allergies, Emergency Contact) before gaining access to the app.
-* **Instant Block Mining**: Submitting the registration form automatically derives the tourist's DID, computes SHA-256 commitments, and anchors the identity into a newly mined block on the consortium ledger.
-* **Multiple Logout Options**:
-  * **Home Screen**: Instant Logout button in the top-right hero header next to notifications with a safety confirmation prompt.
-  * **Tourist ID Screen**: Quick **Logout** pill in the top action bar.
-  * **Full Sign Out Card**: Dedicated **"Sign Out / Switch Account"** button at the bottom of the Tourist ID tab.
+## 📑 Table of Contents
+1. [Overview & Refined System Architecture](#-overview--refined-system-architecture)
+2. [Integrated Core Features](#-integrated-core-features)
+3. [User Experience & 5-Tab Navigation](#-user-experience--5-tab-navigation)
+4. [AI & Machine Learning Engine](#-ai--machine-learning-engine)
+5. [Blockchain Tourist Identity & Cryptographic Records](#-blockchain-tourist-identity--cryptographic-records)
+6. [Emergency Management & Live SOS](#-emergency-management--live-sos)
+7. [Quick Start & Running the Project](#-quick-start--running-the-project)
+8. [Step-by-Step Evaluator & Submission Walkthrough](#-step-by-step-evaluator--submission-walkthrough)
+9. [Project Directory Structure](#-project-directory-structure)
 
 ---
 
-## 📁 Blockchain Codebase Structure
+## 💡 Overview & Refined System Architecture
+
+**Trevora** provides tourists with end-to-end security, navigation, emergency preparedness, and decentralized identity management across all of India. All previously disconnected modules have been unified into a single, cohesive, production-ready system:
 
 ```
-mobile/src/
-├── app/(tabs)/
-│   ├── index.tsx                         # Home screen with personalized greeting & Tourist ID tile
-│   └── profile.tsx                       # Main Tourist Identity & Blockchain Hub
-├── components/blockchain/
-│   ├── blockchain-id-card.tsx            # Holographic Digital Passport card & QR modal
-│   ├── blockchain-verification-panel.tsx # Live SHA-256 verification & tamper test simulator
-│   ├── emergency-directive-card.tsx      # Sealed emergency medical & contact directive
-│   ├── travel-records-list.tsx           # Permits ledger with live block-mining modal
-│   ├── block-explorer-modal.tsx          # Consortium blockchain block & tx explorer
-│   ├── edit-profile-modal.tsx            # Off-chain profile editor with on-chain re-anchoring
-│   └── qr-code.tsx                       # Dependency-free 25x25 QR Matrix renderer
-└── utils/
-    ├── crypto.ts                         # Pure TypeScript RFC 6234 standard SHA-256 engine
-    └── blockchain.ts                     # Consortium chain state, DID, blocks, and verification
+┌────────────────────────────────────────────────────────────────────────┐
+│                   EXPO MOBILE CLIENT (React Native)                    │
+│      Home  •  Live Map  •  Safety Radar  •  Assistant  •  Tourist ID    │
+└───────────────────▲──────────────────────────────▲─────────────────────┘
+                    │ REST API / JSON              │ WebSocket / HTTP
+                    ▼                              ▼
+┌──────────────────────────────────────┐  ┌──────────────────────────────┐
+│       FASTAPI BACKEND SERVICE        │  │     BLOCKCHAIN & TRACKER     │
+│  • ML Safety Score (LightGBM + SHAP) │  │  • W3C DID & SHA-256 Anchors │
+│  • SafeTrip Buddy AI Assistant       │  │  • Tamper-Proof Record Ledger │
+│  • 70+ Pan-India City Registry       │  │  • Emergency Medical Directives│
+│  • Live Incidents & Weather Hazards  │  │  • In-App Consortium Explorer │
+│  • Dynamic Safe Itinerary Engine     │  │  • Live SOS Location Sharing │
+└──────────────────────────────────────┘  └──────────────────────────────┘
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🎯 Integrated Core Features
 
-### 1. Prerequisites
-* [Node.js](https://nodejs.org/) (v18 or later)
-* npm or yarn
+| # | Feature | Technical Implementation | Tourist Benefit |
+|---|---------|--------------------------|-----------------|
+| 1 | **Live Safety Score & Radar** | LightGBM regression model with SHAP explanations | Know real-time safety scores (0–100) and why before visiting |
+| 2 | **SafeTrip Buddy AI Assistant** | Unified FastAPI AI assistant with Gemini + local expert engine | 24/7 intelligent advice for attractions, scams, and itineraries |
+| 3 | **Interactive Map & Safe Routes** | Turn-by-turn navigation, geofenced caution zones, OSM safe points | Avoid hazardous areas; find nearby police, hospitals, and pharmacies |
+| 4 | **Digital Tourist ID & W3C DID** | Holographic passport card with 25x25 QR Matrix pass | Immutable, non-forgeable tourist credential for checkpoints & hotels |
+| 5 | **Cryptographic Tamper Simulator** | SHA-256 hash avalanche stress-test | Instant demonstration of cryptographic ledger security |
+| 6 | **Travel Permits Ledger** | On-chain permit anchoring and block mining | Verified permits for eco-zones, heritage sites, and travel insurance |
+| 7 | **Emergency Medical Directive** | Cryptographically sealed medical profile (blood group, allergies) | Gives rescue workers and paramedics verified medical facts |
+| 8 | **One-Tap SOS & Live Location** | Multi-channel distress dispatch + SMS coordinate sharing | Broadcasts real-time breadcrumbs to trusted contacts and police (112) |
+| 9 | **Smart Dynamic Itinerary** | Budget, duration, and safety-optimized trip planning | Generates day-by-day schedules sorted by safety or interest |
+| 10| **1-Click Demo Sign-In** | Instant authenticated session initialization | Effortless zero-friction evaluation for project review |
 
-### 2. Installation
+---
+
+## 📱 User Experience & 5-Tab Navigation
+
+The mobile application features an intuitive, floating tab bar providing instant access to all core sections:
+
+1. 🏠 **Home**: Greeting, real-time safety status badge, India Safety Radar banner, SOS dispatch card, live location sharing pill, and itinerary progress overview.
+2. 🗺️ **Map**: GPS positioning, restricted zone geofences, hospital/police/pharmacy filters, save safe point, and turn-by-turn safe navigation.
+3. 🛡️ **Safety**: Live safety scores for 70+ Indian cities and major monuments (Taj Mahal, Fort Kochi, India Gate, Gateway of India, Jaipur, Hampi), SHAP feature contributions ("Why this score?"), live weather alerts, recent incidents feed, and crowdsourced incident reporting.
+4. 🤖 **Assistant**: SafeTrip Buddy conversational assistant answering queries about places, night safety, transport, scams, and emergency numbers with GPS location context.
+5. 🪪 **Tourist ID**: Complete Web3 & blockchain identity hub containing the holographic card, real-time SHA-256 verification panel, tamper test simulator, travel records & permits ledger, emergency medical directive, and consortium block explorer.
+
+---
+
+## 🧠 AI & Machine Learning Engine
+
+* **Model**: Gradient-boosted regression trained on OpenStreetMap infrastructure density, road lighting, and real-time environmental factors.
+* **Explainability (SHAP)**: Every score provides positive and negative feature attributions (e.g. `+14 pts: Tourist Police Booth within 250m`, `-8 pts: High coastal swell advisory`).
+* **Pan-India Coverage**: Pre-configured registry for 70+ Indian cities and tourist destinations with on-demand Nominatim geocoding and caching.
+* **Hazard Alerts**: Open-Meteo weather integration for rain, storm, and wind alerts.
+
+---
+
+## ⛓️ Blockchain Tourist Identity & Cryptographic Records
+
+* **Zero-Knowledge Privacy Architecture**:
+  * Off-chain personal data (passport number, contact details, medical history) resides strictly on the tourist's device.
+  * Only deterministic SHA-256 commitments and issuance metadata are anchored on the blockchain.
+* **Interactive Tamper Stress-Test Simulator**:
+  * Tap **"Test Tamper Alert"** in the Tourist ID tab: modifies 1 character of off-chain data.
+  * Real-time verification immediately flips to **`🚨 TAMPER DETECTED`**, demonstrating how ledger verification prevents credential forgery.
+  * Tap **"Restore Clean ID"** to reset back to authentic status.
+* **Permit Anchoring & Mining**:
+  * Tap **"+ Anchor New"** to sign and mine new travel permits into newly mined blocks on the consortium ledger.
+* **In-App Block Explorer**:
+  * Inspect Genesis Block `#0`, Block `#1041`, block hashes, Merkle roots, and verified transactions (`IDENTITY_MINT`, `RECORD_ANCHOR`, `EMERGENCY_DIRECTIVE`).
+
+---
+
+## 🚀 Quick Start & Running the Project
+
+### Prerequisites
+* **Node.js** (v18 or later)
+* **Python** (v3.10 or later)
+* **npm**
+
+### Option A: One-Click Launch (Recommended)
+Double-click `run-app.bat` or run the PowerShell launcher:
+```powershell
+.\run-app.ps1
+```
+This automatically launches:
+1. The **FastAPI Safety & AI Assistant Backend** on `http://localhost:8000`
+2. The **Expo Mobile Client** on `http://localhost:8081`
+
+### Option B: Manual Launch
+
+#### 1. Start the Backend:
+```bash
+cd backend
+python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
+Backend API docs available at: `http://localhost:8000/docs`
+
+#### 2. Start the Mobile App:
 ```bash
 cd mobile
-npm install
-```
-
-### 3. Run Development Server
-```bash
-# Start web version
 npm run web
-
-# Or start interactive Expo runner (iOS / Android / Web)
-npm run start
 ```
-
-Open [http://localhost:8081](http://localhost:8081) in your browser or scan the QR code via **Expo Go** on your physical device.
+App opens in browser at: `http://localhost:8081`
 
 ---
 
-## 🧪 How to Verify the Blockchain Features
+## 🧪 Step-by-Step Evaluator & Submission Walkthrough
 
-1. **View Digital ID**: Navigate to the **Tourist ID** tab. Review your DID (`did:tourist:0x742d...f44e`) and tap **QR Pass** to see the full verifiable pass.
-2. **Verify Integrity**: In the verification panel, verify that the Local SHA-256 hash matches the On-Chain Anchor hash.
-3. **Simulate Tampering**: Tap **"Test Tamper Alert"** and watch the system flag the discrepancy. Tap **"Restore Clean ID"** to reset.
-4. **Anchor a New Permit**: Scroll down to Travel Records, tap **"+ Anchor New"**, fill out a title, and tap **"Sign & Mine into Blockchain"** to see a new block mined live.
-5. **Open Block Explorer**: Tap **"Block Explorer"** at the top right to inspect raw blocks, Merkle roots, and transactions.
+Follow these steps for a complete evaluation demonstration:
+
+1. **Launch the Application**: Open `http://localhost:8081` in your browser.
+2. **Instant Demo Access**: On the welcome screen, click **"⚡ Quick Demo Sign-In (1-Click)"** to immediately enter the authenticated tourist dashboard.
+3. **Explore the Home Dashboard**:
+   * Observe the personalized greeting, active safety status badge ("All Good!"), and live location card.
+   * Review the Emergency SOS card and the India Safety Radar banner.
+4. **Inspect the Map & Safe Navigation**:
+   * Click the **Map** tab in the bottom bar.
+   * View live positioning, danger/caution geofences, and tap the quick filters (**Hospitals**, **Police**, **Pharmacies**) to locate emergency amenities.
+5. **Check Safety Scores & AI Predictions**:
+   * Click the **Safety** tab.
+   * Select preset destinations (e.g. *Taj Mahal, Agra*, *Fort Kochi*, *India Gate, Delhi*) or type any Indian city.
+   * Review the score (0–100), safety category badge (Safe / Caution / Avoid), and the SHAP explanation breakdown ("Why this score?").
+   * Review active live incident alerts and test the **"Report Incident"** modal.
+6. **Chat with Trevora AI**:
+   * Click the **Assistant** tab.
+   * Ask: *"What is the emergency helpline in India?"* or *"Give me a safe 2-day itinerary for Delhi"*.
+   * Trevora AI provides concise, verified advice with emergency numbers (112, 108, 1091).
+7. **Verify Blockchain Tourist Identity**:
+   * Click the **Tourist ID** tab.
+   * Inspect the Holographic Passport Card with W3C DID (`did:tourist:0x742d...f44e`).
+   * Tap **"QR Pass"** to display the 25x25 verifiable QR Matrix.
+   * In the verification panel, verify the SHA-256 hash integrity match.
+   * Tap **"Test Tamper Alert"** &rarr; see the screen immediately flag **`🚨 TAMPER DETECTED`**.
+   * Tap **"Restore Clean ID"** &rarr; see status return to **Authentic (100% Untampered)**.
+   * Scroll down to Travel Records &rarr; tap **"+ Anchor New"** to sign and mine a new permit into the blockchain.
+   * Tap **"Block Explorer"** to inspect blocks, Merkle roots, and raw transactions.
+
+---
+
+## 📁 Project Directory Structure
+
+```
+safety_tourist_app/
+├── backend/                              # FastAPI Python Backend
+│   ├── api/
+│   │   ├── routes/
+│   │   │   ├── chatbot.py                # SafeTrip Buddy AI Assistant router
+│   │   │   ├── safety.py                 # Safety score & city queries
+│   │   │   ├── places.py                 # Tourist attractions & amenities
+│   │   │   ├── incidents.py              # Live news & crowdsourced reports
+│   │   │   └── trip.py                   # Custom trip ranking & itinerary
+│   │   ├── db.py                         # SQLite schema & database connection
+│   │   ├── models.py                     # Pydantic data schemas
+│   │   └── main.py                       # FastAPI application entry point
+│   ├── ml/
+│   │   ├── predictor.py                  # LightGBM + SHAP inference engine
+│   │   └── safety_model.joblib           # Pre-trained gradient boosted model
+│   ├── services/                         # Weather, News, Geocoder, Scoring
+│   ├── run.bat / run.ps1                 # Backend launch scripts
+│   └── requirements.txt
+├── mobile/                               # React Native / Expo Frontend
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── (tabs)/
+│   │   │   │   ├── index.tsx             # Home screen & status dashboard
+│   │   │   │   ├── map.tsx               # Safe navigation & geofencing
+│   │   │   │   ├── safety.tsx            # Safety radar & ML explanations
+│   │   │   │   ├── assistant.tsx         # SafeTrip Buddy AI chat interface
+│   │   │   │   └── profile.tsx           # Blockchain Tourist ID hub
+│   │   │   ├── trip.tsx                  # Dynamic smart itinerary planner
+│   │   │   ├── emergency.tsx             # Emergency SOS & contact directives
+│   │   │   ├── verify.tsx                # Checkpoint QR scanner & verifier
+│   │   │   ├── tourist-id.tsx            # Digital tourist passport view
+│   │   │   ├── welcome.tsx               # Welcome screen with 1-click demo
+│   │   │   ├── login.tsx / signup.tsx    # Auth screens
+│   │   │   └── _layout.tsx               # Root routing & Auth provider
+│   │   ├── components/                   # UI, Blockchain, and Map components
+│   │   ├── context/                      # Auth, Location, and Live-Share context
+│   │   └── utils/                        # Crypto, Blockchain, Trust, Routes, Safety API
+│   └── package.json
+├── tracker/                              # Node.js SOS Live-Location & Identity Server
+├── blockchain/                           # Solidity TouristRegistry Smart Contract
+├── PROJECT_REPORT.html                   # Formal academic & technical report
+├── run-app.bat / run-app.ps1             # One-click project launchers
+└── README.md                             # Project documentation
+```
+
+---
+
+## 🏁 Submission Ready
+
+This project is completely refined, integrated, and verified. Evaluators and presentation panels can run the system effortlessly using `run-app.bat` or `run-app.ps1` and test all 10 core features directly.

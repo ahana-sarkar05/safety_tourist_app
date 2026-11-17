@@ -13,24 +13,29 @@ import { Screen, Card, IconBadge } from "../../components/ui";
 import { theme } from "../../constants/app-theme";
 import {
   TouristProfile,
+  TravelRecord,
   BlockchainBlock,
   BlockchainTransaction,
   VerificationResult,
   getTouristProfile,
+  getTravelRecords,
   getBlockchainBlocks,
   getBlockchainTransactions,
   verifyTouristIdentityIntegrity,
+  seedProfileFromAuth,
 } from "../../utils/blockchain";
 import BlockchainIdCard from "../../components/blockchain/blockchain-id-card";
 import BlockchainVerificationPanel from "../../components/blockchain/blockchain-verification-panel";
 import EmergencyDirectiveCard from "../../components/blockchain/emergency-directive-card";
+import TravelRecordsList from "../../components/blockchain/travel-records-list";
 import BlockExplorerModal from "../../components/blockchain/block-explorer-modal";
 import EditTouristProfileModal from "../../components/blockchain/edit-profile-modal";
 import { useAuth } from "../../context/auth-context";
 
 export default function Profile() {
-  const { logOut } = useAuth();
+  const { logOut, identity } = useAuth();
   const [profile, setProfile] = useState<TouristProfile | null>(null);
+  const [records, setRecords] = useState<TravelRecord[]>([]);
   const [blocks, setBlocks] = useState<BlockchainBlock[]>([]);
   const [transactions, setTransactions] = useState<BlockchainTransaction[]>([]);
   const [verification, setVerification] = useState<VerificationResult | null>(null);
@@ -60,14 +65,24 @@ export default function Profile() {
   };
 
   const fetchData = useCallback(async () => {
+    // Seed the blockchain profile from auth identity if it's still showing placeholder data
+    if (identity) {
+      await seedProfileFromAuth({
+        fullName: identity.profile.fullName,
+        nationality: identity.profile.nationality,
+        email: identity.email,
+        touristId: identity.touristId,
+      });
+    }
     const p = await getTouristProfile();
-    const [b, t] = await Promise.all([
+    const [b, t, recs] = await Promise.all([
       getBlockchainBlocks(),
       getBlockchainTransactions(),
+      getTravelRecords(),
     ]);
     const v = await verifyTouristIdentityIntegrity(p);
-    return { profile: p, blocks: b, transactions: t, verification: v };
-  }, []);
+    return { profile: p, blocks: b, transactions: t, records: recs, verification: v };
+  }, [identity]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -76,6 +91,7 @@ export default function Profile() {
       setProfile(data.profile);
       setBlocks(data.blocks);
       setTransactions(data.transactions);
+      setRecords(data.records);
       setVerification(data.verification);
     } catch (err) {
       console.error("Error loading blockchain profile data:", err);
@@ -92,6 +108,7 @@ export default function Profile() {
         setProfile(data.profile);
         setBlocks(data.blocks);
         setTransactions(data.transactions);
+        setRecords(data.records);
         setVerification(data.verification);
       })
       .catch((err) => {
@@ -110,7 +127,7 @@ export default function Profile() {
       <Screen title="Tourist ID" subtitle="Loading ledger...">
         <View style={styles.centerLoading}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Synchronizing with TouristNet...</Text>
+          <Text style={styles.loadingText}>Synchronizing with Trevora ledger...</Text>
         </View>
       </Screen>
     );
@@ -171,6 +188,8 @@ export default function Profile() {
       />
 
       <EmergencyDirectiveCard profile={profile} />
+
+      <TravelRecordsList records={records} onRefresh={loadData} />
 
       <TouchableOpacity onPress={() => setExplorerVisible(true)}>
         <Card style={styles.explorerCard}>

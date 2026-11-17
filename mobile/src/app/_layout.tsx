@@ -30,7 +30,7 @@ function Gate() {
   if (status === "loading") return <Splash />;
   const signedIn = status === "signedIn";
 
-  const screens = (
+  return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn} redirectTo="/welcome">
         <Stack.Screen name="(tabs)" />
@@ -40,29 +40,23 @@ function Gate() {
         <Stack.Screen name="travel-records" />
         <Stack.Screen name="emergency" />
       </Stack.Protected>
-      <Stack.Protected guard={!signedIn} redirectTo="/">
+      <Stack.Protected guard={!signedIn} redirectTo="/(tabs)">
         <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
       </Stack.Protected>
     </Stack>
   );
-
-  // Location (and its permission prompt) only starts once someone is signed in,
-  // so the welcome screen isn't greeted by a permission dialog.
-  return signedIn ? (
-    <LocationProvider>
-      <LiveShareProvider>{screens}</LiveShareProvider>
-    </LocationProvider>
-  ) : (
-    screens
-  );
 }
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <Gate />
+      <LocationProvider>
+        <LiveShareProvider>
+          <Gate />
+        </LiveShareProvider>
+      </LocationProvider>
     </AuthProvider>
   );
 }

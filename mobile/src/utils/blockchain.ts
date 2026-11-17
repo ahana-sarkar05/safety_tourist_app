@@ -86,19 +86,19 @@ const DEFAULT_WALLET = {
 
 export const INITIAL_TOURIST_PROFILE: TouristProfile = {
   id: "T-892401",
-  fullName: "Abida Rahman",
-  nationality: "Indian",
-  passportNumber: "Z9482103K",
-  dateOfBirth: "1998-05-14",
-  bloodGroup: "O+",
-  allergies: "None Reported",
-  emergencyPhone: "+91 98765 43210",
+  fullName: "New Traveller",
+  nationality: "",
+  passportNumber: "",
+  dateOfBirth: "",
+  bloodGroup: "",
+  allergies: "",
+  emergencyPhone: "",
   walletAddress: DEFAULT_WALLET.address,
   did: DEFAULT_WALLET.did,
-  issuedAt: "2026-03-15",
-  expiresAt: "2027-03-15",
+  issuedAt: new Date().toISOString().split("T")[0],
+  expiresAt: new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
   issuer: "National Tourism & Safety Protocol Authority",
-  email: "abida.rahman@travelsafety.io",
+  email: "",
 };
 
 export const INITIAL_TRAVEL_RECORDS: TravelRecord[] = [];
@@ -255,6 +255,38 @@ export async function getTouristProfile(): Promise<TouristProfile> {
 
 export async function saveTouristProfile(profile: TouristProfile): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+}
+
+/**
+ * Seeds the blockchain profile from the authenticated user's data on first login.
+ * Only runs if the stored profile still has placeholder/empty values.
+ */
+export async function seedProfileFromAuth(opts: {
+  fullName: string;
+  nationality: string;
+  email: string;
+  touristId: string;
+}): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.PROFILE);
+    if (!raw) return; // let initializeBlockchainState handle it on next read
+    const stored: TouristProfile = JSON.parse(raw) as TouristProfile;
+    // Only overwrite if the profile still matches the placeholder default
+    const isPlaceholder =
+      !stored.email ||
+      stored.fullName === "New Traveller" ||
+      stored.email !== opts.email;
+    if (!isPlaceholder) return;
+    const updated: TouristProfile = {
+      ...stored,
+      fullName: opts.fullName.trim() || stored.fullName,
+      nationality: opts.nationality.trim() || stored.nationality,
+      email: opts.email,
+    };
+    await AsyncStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(updated));
+  } catch {
+    // Non-critical — profile will just show defaults
+  }
 }
 
 export async function getTravelRecords(): Promise<TravelRecord[]> {

@@ -21,10 +21,15 @@ const TABS: Record<string, { label: string; on: IconName; off: IconName }> = {
     on: "shield-checkmark",
     off: "shield-checkmark-outline",
   },
+  assistant: {
+    label: "Assistant",
+    on: "chatbubble-ellipses",
+    off: "chatbubble-ellipses-outline",
+  },
   profile: {
-    label: "More",
-    on: "ellipsis-horizontal-circle",
-    off: "ellipsis-horizontal-circle-outline",
+    label: "Tourist ID",
+    on: "id-card",
+    off: "id-card-outline",
   },
 };
 

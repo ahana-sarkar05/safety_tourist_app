@@ -9,7 +9,13 @@ import {
   type ReactNode,
 } from "react";
 import { clearIdentity, loadIdentity, type StoredIdentity } from "../utils/identity";
-import { fetchMe, logIn as apiLogIn, logOut as apiLogOut, signUp as apiSignUp, type SignupInput } from "../utils/auth";
+import {
+  fetchMe,
+  logIn as apiLogIn,
+  logOut as apiLogOut,
+  signUp as apiSignUp,
+  type SignupInput,
+} from "../utils/auth";
 import { setUnauthorizedHandler } from "../utils/trust";
 
 type Status = "loading" | "signedOut" | "signedIn";

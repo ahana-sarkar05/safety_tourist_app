@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from api.routes import health, incidents, places, safety, trip
+from api.routes import auth, chatbot, health, incidents, places, safety, trip
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── STARTUP ───────────────────────────────────────────────────────────────
-    logger.info("=== Tourist Safety App starting up ===")
+    logger.info("=== Trevora starting up ===")
 
     # 1. Ensure DB schema + places
     from api.db import init_db
@@ -65,12 +65,12 @@ async def lifespan(app: FastAPI):
     stop_scheduler()
     from api.db import close_db
     close_db()
-    logger.info("=== Tourist Safety App shut down ===")
+    logger.info("=== Trevora shut down ===")
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="Tourist Safety API",
+    title="Trevora API",
     description=(
         "Real-time safety scores and live incident feed for tourist destinations. "
         "Scores are risk estimates from public data — not guarantees of safety."
@@ -88,11 +88,13 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
+app.include_router(auth.router,      tags=["auth"])
 app.include_router(health.router,    tags=["health"])
 app.include_router(safety.router,    tags=["safety"])
 app.include_router(places.router,    tags=["places"])
 app.include_router(trip.router,      tags=["trip"])
 app.include_router(incidents.router, tags=["incidents"])
+app.include_router(chatbot.router,   tags=["chatbot"])
 
 # ── Serve frontend ────────────────────────────────────────────────────────────
 _FRONTEND = Path(__file__).resolve().parents[1] / "frontend"

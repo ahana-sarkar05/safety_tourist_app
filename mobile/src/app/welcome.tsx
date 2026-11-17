@@ -19,7 +19,7 @@ export default function Welcome() {
     >
       <View style={[styles.top, { paddingTop: insets.top + 40 }]}>
         <Logo size={104} color="#FFF3E8" />
-        <Text style={styles.title}>Tourist Safety</Text>
+        <Text style={styles.title}>Trevora</Text>
         <Text style={styles.tagline}>Travel Smart. Stay Safe.</Text>
       </View>
 
@@ -27,8 +27,9 @@ export default function Welcome() {
 
       <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
         <Text style={styles.sheetText}>
-          Your complete travel companion with blockchain-powered identity
+          Your complete travel companion with real-time safety intelligence
         </Text>
+
         <Pressable
           onPress={() => router.push("/signup")}
           style={({ pressed }) => [styles.primary, pressed && { opacity: 0.85 }]}

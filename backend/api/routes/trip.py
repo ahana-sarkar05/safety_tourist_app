@@ -8,7 +8,7 @@ from fastapi import APIRouter
 from api.models import TripDestination, TripRequest, TripResponse
 from services.scoring import DISCLAIMER, get_live_score, best_hours_today
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 INTEREST_CATEGORY_MAP: dict[str, list[str]] = {
     "historical":  ["historic", "museum", "place_of_worship", "attraction"],

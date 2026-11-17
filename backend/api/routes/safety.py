@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from api.models import PlaceResponse, SafetyScoreResponse
 from services.scoring import DISCLAIMER, get_live_score, label_for_score
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 def resolve_coordinates(

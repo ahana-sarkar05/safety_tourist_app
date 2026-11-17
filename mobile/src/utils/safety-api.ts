@@ -1,23 +1,12 @@
 /**
- * Tourist Safety Backend API Client
+ * Trevora Backend API Client
  * Connects Expo mobile app to the FastAPI Pan-India Safety Score & Live Incident engine.
  */
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import { getApiBase } from "./identity";
 
-// Dynamically extract host computer's IP or fallback to local WiFi subnet
-const hostUri = Constants.expoConfig?.hostUri;
-const hostIp = (hostUri && !hostUri.includes("ngrok") && !hostUri.includes("expo"))
-  ? hostUri.split(":")[0]
-  : "192.168.31.246";
-
-const DEFAULT_URL = Platform.select({
-  web: "http://localhost:8000",
-  android: Platform.isPad ? "http://10.0.2.2:8000" : `http://${hostIp}:8000`,
-  default: `http://${hostIp}:8000`,
-});
-
-export const BACKEND_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_URL;
+export const BACKEND_URL = getApiBase();
 
 /**
  * Fast-failing fetch wrapper so mobile UI never buffers or freezes
@@ -222,7 +211,7 @@ export async function fetchSafetyScore(opts: {
 }): Promise<SafetyScoreResult | null> {
   const queryKey = (opts.place || "").trim().toLowerCase();
   try {
-    let url = `${BACKEND_URL}/safety-score`;
+    let url = `${BACKEND_URL}/api/safety-score`;
     const params = new URLSearchParams();
     if (opts.lat != null && opts.lon != null) {
       params.append("lat", opts.lat.toString());
@@ -273,7 +262,7 @@ export async function fetchSafestPlaces(opts: {
     if (opts.lon != null) params.append("lon", opts.lon.toString());
     if (opts.radiusKm) params.append("radius_km", opts.radiusKm.toString());
 
-    const res = await fetchWithTimeout(`${BACKEND_URL}/places/safest?${params.toString()}`, {}, 2200);
+    const res = await fetchWithTimeout(`${BACKEND_URL}/api/places/safest?${params.toString()}`, {}, 2200);
     if (!res.ok) return [];
     return (await res.json()) as PlaceResult[];
   } catch (e) {
@@ -283,7 +272,7 @@ export async function fetchSafestPlaces(opts: {
 
 export async function fetchLiveIncidents(hours: number = 48): Promise<IncidentResult[]> {
   try {
-    const res = await fetchWithTimeout(`${BACKEND_URL}/incidents?hours=${hours}&limit=50`, {}, 2200);
+    const res = await fetchWithTimeout(`${BACKEND_URL}/api/incidents?hours=${hours}&limit=50`, {}, 2200);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as IncidentResult[];
   } catch (e) {
@@ -343,7 +332,7 @@ export async function submitIncidentReport(report: {
   lon: number;
 }): Promise<boolean> {
   try {
-    const res = await fetchWithTimeout(`${BACKEND_URL}/incidents/report`, {
+    const res = await fetchWithTimeout(`${BACKEND_URL}/api/incidents/report`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(report),
@@ -363,7 +352,7 @@ export async function fetchTripDestinations(req: {
   lon?: number;
 }): Promise<TripDestinationResult[]> {
   try {
-    const res = await fetchWithTimeout(`${BACKEND_URL}/trip`, {
+    const res = await fetchWithTimeout(`${BACKEND_URL}/api/trip`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

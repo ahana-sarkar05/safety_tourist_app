@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query
 
 from api.models import PlaceResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 @router.get("/places", response_model=list[PlaceResponse])

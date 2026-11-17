@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pan-India Tourist Safety App - Project Report</title>
+<title>Trevora - Pan-India Tourist Safety App - Project Report</title>
 <style>
   @page {
     size: A4;
@@ -116,7 +116,7 @@
 </head>
 <body>
 
-<h1>📘 Pan-India Tourist Safety & Travel Intelligence System</h1>
+<h1>📘 Trevora — Pan-India Tourist Safety & Travel Intelligence System</h1>
 <div class="header-meta">
   <strong>Comprehensive Technical & Feature Report</strong> | Architecture, Machine Learning, Real-Time Ingestion & Blockchain
 </div>
@@ -290,8 +290,19 @@
   <li><span class="code">GET /incidents?hours=48</span> &mdash; Active live incidents feed.</li>
   <li><span class="code">POST /incidents/report</span> &mdash; Submits a user-reported incident.</li>
   <li><span class="code">GET /cities</span> &mdash; Returns all 70+ pre-cached Indian cities and coordinates.</li>
+  <li><span class="code">POST /api/chat</span> &mdash; SafeTrip Buddy conversational AI with location context.</li>
+  <li><span class="code">GET /api/history/{client_id}/{chat_id}</span> &mdash; Chat conversation persistence.</li>
   <li><span class="code">GET /health</span> &mdash; API health and status check.</li>
 </ul>
+
+<h2>7. System Verification & Evaluator Demo Guide</h2>
+<ol>
+  <li><strong>One-Click Startup:</strong> Run <span class="code">run-app.bat</span> or <span class="code">run-app.ps1</span> to concurrently boot the FastAPI AI engine on port 8000 and the Expo Mobile client on port 8081.</li>
+  <li><strong>Instant Evaluator Access:</strong> Click <em>"⚡ Quick Demo Sign-In (1-Click)"</em> on the welcome screen to bypass configuration and immediately access the full tourist dashboard.</li>
+  <li><strong>5-Tab Exploration:</strong> Verify seamless switching across <em>Home</em>, <em>Map</em>, <em>Safety</em>, <em>Assistant</em>, and <em>Tourist ID</em>.</li>
+  <li><strong>Cryptographic Tamper Stress-Test:</strong> Navigate to the <em>Tourist ID</em> tab, tap <em>"Test Tamper Alert"</em> to observe instant SHA-256 mismatch detection on Block #1041, then tap <em>"Restore Clean ID"</em> to return to authentic status.</li>
+  <li><strong>Live Permit Anchoring:</strong> Tap <em>"+ Anchor New"</em> in Travel Records to mine a verified permit live into the consortium ledger.</li>
+</ol>
 
 </body>
 </html>

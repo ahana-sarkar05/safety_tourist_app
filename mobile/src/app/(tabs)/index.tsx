@@ -112,7 +112,7 @@ export default function Home() {
         {/* Greeting */}
         <View style={{ paddingTop: insets.top + 18, paddingHorizontal: 22 }}>
           <Text style={styles.hi}>Hello, {firstName}! 👋</Text>
-          <Text style={styles.subtitle}>Your travel companion</Text>
+          <Text style={styles.subtitle}>Your Trevora travel companion</Text>
         </View>
         <View style={{ marginTop: -6 }}>
           <Skyline height={92} opacity={0.26} />

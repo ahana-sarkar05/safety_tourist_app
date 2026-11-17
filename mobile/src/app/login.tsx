@@ -28,11 +28,17 @@ export default function Login() {
     if (problem) return setError(problem);
     setBusy(true);
     setError(null);
-    const message = await logIn(email, password);
-    // On success the app moves to Home by itself (this screen goes away).
-    if (message) {
+    try {
+      const message = await logIn(email, password);
       setBusy(false);
-      setError(message);
+      if (message) {
+        setError(message);
+      } else {
+        router.replace("/(tabs)");
+      }
+    } catch {
+      setBusy(false);
+      setError("An unexpected error occurred. Please try again.");
     }
   };
 

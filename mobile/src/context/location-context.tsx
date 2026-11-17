@@ -10,6 +10,7 @@ import {
 } from "react";
 import { AppState, Linking, Vibration } from "react-native";
 import * as Location from "expo-location";
+import { useAuth } from "./auth-context";
 import type { Coord } from "../utils/distance";
 import { Zone, zonesContaining } from "../utils/zones";
 
@@ -41,6 +42,9 @@ const NAVIGATION_WATCH = {
 };
 
 export function LocationProvider({ children }: { children: ReactNode }) {
+  const { status: authStatus } = useAuth();
+  const signedIn = authStatus === "signedIn";
+
   const [location, setLocation] = useState<Coord | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [status, setStatus] = useState<LocationStatus>("loading");
@@ -59,6 +63,10 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   // Permission + live GPS. Restarts when you retry or switch navigation mode.
   useEffect(() => {
+    if (!signedIn) {
+      setStatus("loading");
+      return;
+    }
     let cancelled = false;
     let subscription: Location.LocationSubscription | undefined;
     let slowTimer: ReturnType<typeof setTimeout> | undefined;
@@ -134,7 +142,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       subscription?.remove();
       if (slowTimer) clearTimeout(slowTimer);
     };
-  }, [attempt, navMode]);
+  }, [attempt, navMode, signedIn]);
 
   // Coming back from the phone's settings screen? Try again automatically.
   useEffect(() => {

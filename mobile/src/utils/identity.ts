@@ -1,10 +1,43 @@
+import { Platform } from "react-native";
+import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { clearToken, getToken, setToken } from "./secure-token";
 
-// Same server as live location (see /tracker). Set EXPO_PUBLIC_TRACKER_URL in .env.
-const BASE = (process.env.EXPO_PUBLIC_TRACKER_URL ?? "").trim().replace(/\/+$/, "");
-export const API_BASE = BASE;
-export const identityConfigured = BASE.length > 0;
+/**
+ * Dynamically resolves Trevora API base URL.
+ * Automatically handles web localhost, Android emulator (10.0.2.2), and physical devices via Expo host IP.
+ */
+export function getApiBase(): string {
+  if (Platform.OS === "web" && typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://localhost:8000";
+    }
+    return `http://${host}:8000`;
+  }
+
+  // Extract Metro host IP if running under Expo Go / dev client
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri && !hostUri.includes("ngrok") && !hostUri.includes("expo")) {
+    const hostIp = hostUri.split(":")[0];
+    return `http://${hostIp}:8000`;
+  }
+
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim().replace(/\/+$/, "");
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl;
+  }
+
+  // Android emulator fallback
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:8000";
+  }
+
+  return "http://192.168.29.24:8000";
+}
+
+export const API_BASE = getApiBase();
+export const identityConfigured = true;
 
 export type TouristProfile = {
   touristId: string;

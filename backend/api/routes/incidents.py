@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from api.models import IncidentReportRequest, IncidentResponse
 from services.classifier import classify
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 VALID_TYPES = {
     "THEFT", "ASSAULT", "HARASSMENT", "ACCIDENT",

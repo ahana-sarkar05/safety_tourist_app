@@ -59,7 +59,7 @@ def _fetch_gdelt(query: str, max_records: int = 10) -> list[dict]:
         "sourcelang": "english",
     }
     try:
-        r = requests.get(url, params=params, timeout=15)
+        r = requests.get(url, params=params, timeout=3)
         r.raise_for_status()
         data = r.json()
         articles = data.get("articles", []) or []
@@ -83,7 +83,11 @@ def _fetch_gnews_rss(query: str) -> list[dict]:
     encoded = query.replace(" ", "+")
     url = f"https://news.google.com/rss/search?q={encoded}&hl=en-IN&gl=IN&ceid=IN:en"
     try:
-        feed = feedparser.parse(url)
+        # Fetch with timeout using requests rather than unconstrained feedparser
+        r = requests.get(url, timeout=3, headers={"User-Agent": "Mozilla/5.0"})
+        if not r.ok:
+            return []
+        feed = feedparser.parse(r.content)
         result = []
         for entry in feed.entries[:10]:
             ts = entry.get("published", datetime.now(timezone.utc).isoformat())
@@ -111,7 +115,7 @@ def _fetch_newsapi(query: str) -> list[dict]:
         "apiKey": _NEWS_API_KEY,
     }
     try:
-        r = requests.get(url, params=params, timeout=15)
+        r = requests.get(url, params=params, timeout=3)
         r.raise_for_status()
         articles = r.json().get("articles", [])
         return [{
@@ -177,11 +181,24 @@ def fetch_and_classify_news() -> list[dict]:
     """
     raw: list[dict] = []
 
+    consecutive_empty = 0
     for term in SEARCH_TERMS:
-        raw.extend(_fetch_gdelt(term, max_records=5))
-        raw.extend(_fetch_gnews_rss(term))
-        raw.extend(_fetch_newsapi(term))
-        time.sleep(0.3)  # gentle on public APIs
+        gdelt_items = _fetch_gdelt(term, max_records=5)
+        gnews_items = _fetch_gnews_rss(term)
+        newsapi_items = _fetch_newsapi(term)
+        count = len(gdelt_items) + len(gnews_items) + len(newsapi_items)
+        if count == 0:
+            consecutive_empty += 1
+            if consecutive_empty >= 3 and not raw:
+                logger.info("External news network unreachable; stopping live scrape.")
+                break
+        else:
+            consecutive_empty = 0
+
+        raw.extend(gdelt_items)
+        raw.extend(gnews_items)
+        raw.extend(newsapi_items)
+        time.sleep(0.1)
 
     logger.info("Raw articles fetched: %d", len(raw))
 

@@ -43,13 +43,13 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // Onboarding fields
-  const [fullName, setFullName] = useState(session?.name || "Abida Rahman");
-  const [nationality, setNationality] = useState("Indian");
-  const [passportNumber, setPassportNumber] = useState("Z9482103K");
-  const [dateOfBirth, setDateOfBirth] = useState("1998-05-14");
-  const [bloodGroup, setBloodGroup] = useState("O+");
-  const [allergies, setAllergies] = useState("Penicillin (Moderate)");
-  const [emergencyPhone, setEmergencyPhone] = useState("+91 98765 43210");
+  const [fullName, setFullName] = useState(session?.name || "");
+  const [nationality, setNationality] = useState("");
+  const [passportNumber, setPassportNumber] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
+  const [allergies, setAllergies] = useState("");
+  const [emergencyPhone, setEmergencyPhone] = useState("");
 
   const signOut = logOut;
   const signInWithGoogle = async (_mode?: "login" | "register") => {
@@ -166,10 +166,10 @@ export default function AuthScreen() {
       >
         <View style={styles.badge}>
           <Ionicons name="shield-checkmark" size={14} color="#FFD38A" />
-          <Text style={styles.badgeText}>BLOCKCHAIN TOURIST SAFETY NETWORK</Text>
+          <Text style={styles.badgeText}>TREVORA IDENTITY NETWORK</Text>
         </View>
 
-        <Text style={styles.heroTitle}>Smart Tourist Safety & Identity</Text>
+        <Text style={styles.heroTitle}>Trevora Smart Identity</Text>
         <Text style={styles.heroSubtitle}>
           Decentralized ID • Zero-Knowledge Privacy • Emergency Responders
         </Text>

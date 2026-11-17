@@ -6,7 +6,10 @@ Usage:
     python -m ml.train
 """
 import joblib
-import shap
+try:
+    import shap
+except ImportError:
+    shap = None
 from pathlib import Path
 
 from ml.safety_score_model import build_dataset, train
@@ -24,23 +27,40 @@ def run_training():
     print("Training LightGBM model …")
     model = train(df)
 
-    print("Building SHAP TreeExplainer …")
-    explainer = shap.TreeExplainer(model)
+    explainer = None
+    if shap is not None:
+        try:
+            print("Building SHAP TreeExplainer …")
+            explainer = shap.TreeExplainer(model)
+            joblib.dump(explainer, EXPLAINER_PATH)
+            print(f"Saved explainer  -> {EXPLAINER_PATH}")
+        except Exception as e:
+            print(f"Could not build SHAP explainer: {e}")
 
     joblib.dump(model, MODEL_PATH)
-    joblib.dump(explainer, EXPLAINER_PATH)
     print(f"Saved model      -> {MODEL_PATH}")
-    print(f"Saved explainer  -> {EXPLAINER_PATH}")
     return model, explainer
 
 
 def load_model():
-    """Load model and explainer from disk; auto-train if missing."""
-    if not MODEL_PATH.exists() or not EXPLAINER_PATH.exists():
-        print("Model files not found - running training ...")
-        run_training()
-    model    = joblib.load(MODEL_PATH)
-    explainer = joblib.load(EXPLAINER_PATH)
+    """Load model and explainer from disk; auto-train if missing or incompatible."""
+    model = None
+    if MODEL_PATH.exists():
+        try:
+            model = joblib.load(MODEL_PATH)
+        except Exception:
+            print("Cached model incompatible with current environment — re-training...")
+            model = None
+
+    if model is None:
+        model, _ = run_training()
+
+    explainer = None
+    if EXPLAINER_PATH.exists():
+        try:
+            explainer = joblib.load(EXPLAINER_PATH)
+        except Exception:
+            explainer = None
     return model, explainer
 
 

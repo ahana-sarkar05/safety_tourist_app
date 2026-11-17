@@ -31,11 +31,17 @@ export default function SignUp() {
     if (problem) return setError(problem);
     setBusy(true);
     setError(null);
-    const message = await signUp(input);
-    // On success the app moves to Home by itself (this screen goes away).
-    if (message) {
+    try {
+      const message = await signUp(input);
       setBusy(false);
-      setError(message);
+      if (message) {
+        setError(message);
+      } else {
+        router.replace("/(tabs)");
+      }
+    } catch {
+      setBusy(false);
+      setError("An unexpected error occurred. Please try again.");
     }
   };
 
