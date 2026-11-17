@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -80,10 +80,30 @@ export default function Home() {
   const safety = safetyLook(idStatus);
 
   const tiles: Tile[] = [
-    { label: "My Tourist ID", sub: "View your digital ID", icon: "id-card", onPress: () => router.push("/tourist-id") },
-    { label: "Verify Identity", sub: "Scan & check", icon: "scan", onPress: () => router.push("/verify") },
-    { label: "Travel Records", sub: "Manage records", icon: "document-text", onPress: () => router.push("/travel-records") },
-    { label: "Emergency Sharing", sub: "Share if needed", icon: "people", onPress: () => router.push("/emergency") },
+    {
+      label: "AI Travel\nAssistant",
+      sub: "Ask anything about your trip",
+      icon: "chatbubble-ellipses",
+      onPress: () => router.navigate("/assistant"),
+    },
+    {
+      label: "Live Map &\nNavigation",
+      sub: "Navigate and share your location",
+      icon: "navigate",
+      onPress: () => router.navigate("/map"),
+    },
+    {
+      label: "Safety\nAlerts",
+      sub: "Check scores and live incidents",
+      icon: "shield-checkmark",
+      onPress: () => router.navigate("/safety"),
+    },
+    {
+      label: "Your\nItinerary",
+      sub: "View and update your plans",
+      icon: "calendar",
+      onPress: () => router.push("/trip"),
+    },
   ];
 
   return (
@@ -98,21 +118,45 @@ export default function Home() {
           <Skyline height={92} opacity={0.26} />
         </View>
 
-        {/* Safety status */}
+        <View style={styles.statusCard}>
+          <Pressable
+            style={styles.statusContent}
+            onPress={() => router.push("/tourist-id")}
+            accessibilityRole="button"
+            accessibilityLabel={`Your Safety Status: ${safety.text}`}
+          >
+            <View style={styles.statusIcon}>
+              <Ionicons name={safety.icon} size={28} color={safety.color} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.statusLabel}>Your Safety Status</Text>
+              <Text style={[styles.statusValue, { color: safety.color }]}>{safety.text}</Text>
+            </View>
+          </Pressable>
+          <Pressable
+            style={styles.bell}
+            onPress={() => Alert.alert("Notifications", "No new alerts yet.")}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+          >
+            <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+          </Pressable>
+        </View>
+
         <Pressable
-          style={styles.statusCard}
-          onPress={() => router.push("/tourist-id")}
+          onPress={() => router.navigate("/safety")}
+          style={styles.safetyBanner}
           accessibilityRole="button"
-          accessibilityLabel={`Your Safety Status: ${safety.text}`}
+          accessibilityLabel="Open live safety radar"
         >
-          <View style={styles.statusIcon}>
-            <Ionicons name={safety.icon} size={30} color={safety.color} />
+          <View style={styles.safetyBadge}>
+            <Ionicons name="shield-checkmark" size={24} color={theme.colors.success} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.statusLabel}>Your Safety Status</Text>
-            <Text style={[styles.statusValue, { color: safety.color }]}>{safety.text}</Text>
+            <Text style={styles.safetyTitle}>India Safety Radar</Text>
+            <Text style={styles.safetySub}>Live safety scores and incident alerts</Text>
           </View>
-          <Ionicons name="chevron-forward" size={22} color={theme.colors.muted} />
+          <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
         </Pressable>
 
         {/* Emergency SOS */}
@@ -219,14 +263,25 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.card,
     ...theme.shadow,
   },
-  statusIcon: { width: 54, height: 54, borderRadius: 27, backgroundColor: theme.colors.mint, alignItems: "center", justifyContent: "center" },
-  statusLabel: { color: theme.colors.ink, fontSize: 15, fontWeight: "600" },
-  statusValue: { fontSize: 24, fontWeight: "800", marginTop: 2 },
-
+  statusContent: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
+  statusIcon: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  statusLabel: { fontSize: 13, color: theme.colors.muted },
+  statusValue: { fontSize: 17, fontWeight: "800", marginTop: 2 },
+  bell: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.primary },
+  safetyBanner: { flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 20, marginTop: 14, padding: 14, backgroundColor: theme.colors.card, borderRadius: theme.radius.card, ...theme.shadow },
+  safetyBadge: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: theme.colors.mint },
+  safetyTitle: { fontSize: 15, fontWeight: "800", color: theme.colors.ink },
+  safetySub: { fontSize: 12, color: theme.colors.muted, marginTop: 2 },
   sos: { marginHorizontal: 20, marginTop: 16 },
   banner: { marginTop: 12 },
 
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 14, paddingHorizontal: 20, marginTop: 18 },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 14,
+    paddingHorizontal: 20,
+    marginTop: 22,
+  },
   tile: {
     flexBasis: "45%",
     flexGrow: 1,

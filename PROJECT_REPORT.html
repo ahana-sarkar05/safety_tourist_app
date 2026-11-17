@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pan-India Tourist Safety App - Project Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 20mm 18mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    line-height: 1.55;
+    font-size: 11pt;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    color: #b71c1c;
+    font-size: 20pt;
+    border-bottom: 2.5px solid #b71c1c;
+    padding-bottom: 8px;
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+  h2 {
+    color: #1565c0;
+    font-size: 14pt;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 4px;
+    margin-top: 24px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+  }
+  h3 {
+    color: #2e7d32;
+    font-size: 12pt;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+  h4 {
+    color: #37474f;
+    font-size: 11pt;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    page-break-after: avoid;
+  }
+  p, li {
+    color: #2c3e50;
+    font-size: 10pt;
+  }
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding-left: 22px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #cfd8dc;
+    padding: 7px 10px;
+    text-align: left;
+  }
+  th {
+    background-color: #eceff1;
+    color: #263238;
+    font-weight: 700;
+  }
+  tr:nth-child(even) {
+    background-color: #f9fbfd;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 8.5pt;
+  }
+  .safe { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .caution { background-color: #fff3e0; color: #ef6c00; border: 1px solid #ffcc80; }
+  .avoid { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+  .box {
+    background: #f8fafc;
+    border-left: 4px solid #1976d2;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 9.5pt;
+  }
+  .code {
+    font-family: Consolas, "Courier New", monospace;
+    background: #f1f3f5;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 9pt;
+  }
+  .header-meta {
+    margin-bottom: 18px;
+    font-size: 9.5pt;
+    color: #607d8b;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<h1>📘 Pan-India Tourist Safety & Travel Intelligence System</h1>
+<div class="header-meta">
+  <strong>Comprehensive Technical & Feature Report</strong> | Architecture, Machine Learning, Real-Time Ingestion & Blockchain
+</div>
+
+<div class="box">
+  <strong>Project Overview:</strong> An intelligent, real-time safety monitoring and emergency assistance application built for tourists across all of India. Combines a <strong>React Native / Expo Mobile Client</strong> with an asynchronous <strong>FastAPI Backend</strong> running <strong>LightGBM Gradient Boosted Regression</strong>, <strong>SHAP Explainability</strong>, OpenStreetMap infrastructure mapping, live Open-Meteo weather hazard checks, automated news ingestion, and <strong>Decentralized Web3 / Blockchain Digital Identity</strong>.
+</div>
+
+<h2>1. System Architecture & Information Flow</h2>
+<p>The system operates across three interconnected layers:</p>
+<ol>
+  <li><strong>Mobile Client Layer:</strong> React Native with Expo Router, Leaflet/Mapbox vector cartography, turn-by-turn safe routing, and emergency SOS dispatch.</li>
+  <li><strong>Backend Processing & Scoring Layer:</strong> FastAPI framework with continuous spatial indexing (Uber H3 Resolution-8 hexagons, ~460m radius).</li>
+  <li><strong>Dynamic Data & Verification Layer:</strong>
+    <ul>
+      <li><strong>OpenStreetMap Overpass API:</strong> Automated scanning of police stations, emergency hospitals, and municipal lighting within a 15 km radius.</li>
+      <li><strong>Open-Meteo Weather API:</strong> Live hourly rain precipitation, wind speed, and convective storm detection.</li>
+      <li><strong>GDELT & Google News RSS:</strong> Real-time automated scraping and NLP classification of civil unrest, natural hazards, and crimes.</li>
+      <li><strong>Blockchain Identity Layer:</strong> Cryptographic verification of traveler identities, permits, and emergency health profiles.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2>2. Core Artificial Intelligence & Safety Features</h2>
+
+<h3>2.1. Real-Time Dynamic Safety Score (0 – 100)</h3>
+<p>Calculates an objective, continuous risk score for any location, neighborhood, or tourist spot in India based on:</p>
+<ul>
+  <li><span class="badge safe">SAFE (80 – 100)</span> Dense police posts, rapid medical emergency access, high public illumination, active surveillance corridors.</li>
+  <li><span class="badge caution">CAUTION (60 – 79)</span> High tidal warnings, limited late-night lighting, or isolated non-violent incidents.</li>
+  <li><span class="badge avoid">AVOID (&lt; 60)</span> Active storm surge advisories, extreme flooding, landslides, or active civil curfews.</li>
+</ul>
+
+<h3>2.2. Explainable AI with SHAP ("Why this score?")</h3>
+<p>Rather than providing an uninterpretable score, the model uses <strong>SHAP (SHapley Additive exPlanations)</strong> to explain the factors contributing to the rating:</p>
+<ul>
+  <li><em>"Tourist Police Assistance Booth within 250m (+14 pts)"</em></li>
+  <li><em>"General Emergency Hospital reachable within 1.4 km (+8 pts)"</em></li>
+  <li><em>"High CCTV coverage along heritage street (+6 pts)"</em></li>
+  <li><em>"High coastal swell advisory (-8 pts)"</em></li>
+</ul>
+
+<h3>2.3. Dynamic Pan-India City Registry & On-Demand OSM Scanner</h3>
+<p>Pre-configured with <strong>70+ Indian cities and major tourist destinations</strong> (Delhi, Mumbai, Agra, Jaipur, Varanasi, Goa, Hampi, Kochi, Munnar, Darjeeling, etc.). When a tourist searches any new Indian town, town square, or landmark:</p>
+<ol>
+  <li>Resolves GPS coordinates via <strong>Nominatim Geocoder</strong> (<span class="code">countrycodes=in</span>).</li>
+  <li>Scans OpenStreetMap Overpass for police stations (<span class="code">amenity=police</span>) and hospitals (<span class="code">amenity=hospital</span>).</li>
+  <li>Caches feature distances in local SQLite (<span class="code">city_cache.db</span>) for 7 days, guaranteeing sub-second response times.</li>
+</ol>
+
+<div class="page-break"></div>
+
+<h3>2.4. Automated 20-Minute News Ingestion & Recency Decay</h3>
+<p>A background worker (<span class="code">APScheduler</span>) periodically ingests news from the GDELT Project and Google News RSS across Indian states:</p>
+<ul>
+  <li><strong>NLP Incident Classification:</strong> Classifies headlines into 12 categories: theft, harassment, weather, traffic, scam, accident, protest, curfew, etc.</li>
+  <li><strong>Jaccard Deduplication:</strong> Eliminates duplicate articles from multiple publishers.</li>
+  <li><strong>36-Hour Exponential Decay:</strong> Recent incidents apply maximum score deductions; penalties decrease by 50% after 36 hours and phase out entirely after 72 hours.</li>
+</ul>
+
+<h3>2.5. Live Weather Hazard Integration</h3>
+<p>Connects to Open-Meteo's weather models covering India. Extreme rainfall (&gt;10 mm/h), high wind gusts, or thunderstorms immediately deduct points and trigger hazard warnings.</p>
+
+<h3>2.6. Crowdsourced Incident Reporting</h3>
+<p>Tourists can submit real-time reports of hazards (scams, broken infrastructure, harassment, waterlogging) directly through the app, immediately updating the neighborhood's risk level.</p>
+
+<h2>3. Blockchain Login & Decentralized Digital Tourist ID</h2>
+
+<p>To eliminate centralized database security risks, identity theft, and credential vulnerabilities, the application integrates a <strong>Decentralized Identity (DID) & Web3 Authentication module</strong>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>Technical Architecture</th>
+      <th>Traveler Safety Benefit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Blockchain Digital Tourist ID</strong></td>
+      <td>Issues a cryptographically signed Decentralized Identifier (<span class="code">did:tourist:...</span>) tied to a Web3 wallet.</td>
+      <td>Non-forgeable, tamper-proof digital tourist permit recognized at park gates, checkpoints, and police desks.</td>
+    </tr>
+    <tr>
+      <td><strong>Tamper-Proof Emergency Medical Records</strong></td>
+      <td>Stores cryptographic hashes of critical medical info (blood group, allergies, pre-existing conditions) on-chain.</td>
+      <td>Guarantees search-and-rescue teams receive unalterable medical facts during emergencies.</td>
+    </tr>
+    <tr>
+      <td><strong>Cryptographic SOS Verification</strong></td>
+      <td>Signs distress dispatches with the traveler's asymmetric private key.</td>
+      <td>Prevents spoofed or malicious SOS alerts, ensuring emergency teams deploy with maximum priority.</td>
+    </tr>
+    <tr>
+      <td><strong>Web3 Wallet Single Sign-On (SSO)</strong></td>
+      <td>Passwordless authentication using asymmetric signature verification (MetaMask / WalletConnect / Web3Auth).</td>
+      <td>Eliminates password leaks, database breaches, and credential stuffing vulnerabilities.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Mobile Client Features (React Native / Expo)</h2>
+<ul>
+  <li><strong>India Safety Radar Home Banner:</strong> Shows real-time zone safety ratings, safe status tags, and quick-action navigation.</li>
+  <li><strong>Live Safety Dashboard Screen:</strong> Quick preset chips for major Indian monuments (Taj Mahal, India Gate, Gateway of India, Jaipur, Hampi, Fort Kochi) plus free-text search for any location across India.</li>
+  <li><strong>Interactive Navigation &amp; Safe Points:</strong> Live GPS breadcrumb tracking with emergency quick-filters for nearby <em>Hospitals</em>, <em>Police Stations</em>, and <em>Pharmacies</em>. Includes a "Save Safe Point" feature for returning to hotels or safe havens.</li>
+  <li><strong>One-Tap Emergency SOS:</strong> Sends emergency SMS alerts containing the user's exact coordinates to trusted emergency contacts.</li>
+  <li><strong>Top Rated Safe Tourist Destinations:</strong> Curated nationwide rankings of attractions, complete with verified security badges, optimal visiting hours, and descriptions.</li>
+</ul>
+
+<h2>5. Technical Stack Summary Table</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Layer</th>
+      <th>Technology</th>
+      <th>Key Role in Project</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Mobile Client</strong></td>
+      <td>React Native, Expo Router, TypeScript</td>
+      <td>Cross-platform iOS and Android mobile frontend</td>
+    </tr>
+    <tr>
+      <td><strong>Backend Framework</strong></td>
+      <td>FastAPI, Uvicorn, Python 3.13</td>
+      <td>Asynchronous REST API engine</td>
+    </tr>
+    <tr>
+      <td><strong>Machine Learning</strong></td>
+      <td>LightGBM, Scikit-Learn</td>
+      <td>Supervised gradient-boosted regression for safety score modeling</td>
+    </tr>
+    <tr>
+      <td><strong>Explainability</strong></td>
+      <td>SHAP (TreeExplainer)</td>
+      <td>Mathematical feature contribution breakdown</td>
+    </tr>
+    <tr>
+      <td><strong>Spatial Indexing</strong></td>
+      <td>Uber H3 (Python bindings)</td>
+      <td>Hexagonal spatial binning (resolution 8, ~460m radius)</td>
+    </tr>
+    <tr>
+      <td><strong>Blockchain &amp; ID</strong></td>
+      <td>Web3 / Decentralized Identifiers (DID)</td>
+      <td>Blockchain-verified Tourist ID, secure wallet login, immutable medical info</td>
+    </tr>
+    <tr>
+      <td><strong>Databases</strong></td>
+      <td>SQLite (<span class="code">places.db</span>, <span class="code">city_cache.db</span>, <span class="code">geocache.db</span>)</td>
+      <td>Persistent local storage for places, reports, and geocache</td>
+    </tr>
+    <tr>
+      <td><strong>External APIs</strong></td>
+      <td>OpenStreetMap (Overpass), Open-Meteo, GDELT</td>
+      <td>Zero-cost real-time spatial, weather, and news data ingestion</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6. REST API Endpoints</h2>
+<ul>
+  <li><span class="code">GET /safety-score?place={name}&amp;lat={lat}&amp;lon={lon}</span> &mdash; Live safety evaluation for any place in India.</li>
+  <li><span class="code">GET /places/safest?place={name}&amp;radius_km=15</span> &mdash; Safest attractions nearby.</li>
+  <li><span class="code">POST /trip</span> &mdash; Generates a safe, custom itinerary sorted by safety or interest.</li>
+  <li><span class="code">GET /incidents?hours=48</span> &mdash; Active live incidents feed.</li>
+  <li><span class="code">POST /incidents/report</span> &mdash; Submits a user-reported incident.</li>
+  <li><span class="code">GET /cities</span> &mdash; Returns all 70+ pre-cached Indian cities and coordinates.</li>
+  <li><span class="code">GET /health</span> &mdash; API health and status check.</li>
+</ul>
+
+</body>
+</html>

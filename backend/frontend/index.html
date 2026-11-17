@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tourist Safety — Ernakulam / Kochi</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Local styles -->
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ── Disclaimer banner ───────────────────────────────────────────────── -->
+<div id="disclaimer-banner">
+  ⚠️ Safety scores are <strong>risk estimates</strong> from public data and news — <em>not guarantees of safety</em>.
+  Always exercise personal judgement and check official advisories.
+</div>
+
+<!-- ── Top bar ────────────────────────────────────────────────────────── -->
+<header id="topbar">
+  <div id="logo">🛡️ Tourist Safety — Kochi</div>
+  <nav>
+    <button class="tab-btn active" data-tab="safety-check">Safety Check</button>
+    <button class="tab-btn" data-tab="trip-planner">Tourist Destinations</button>
+    <button class="tab-btn" data-tab="incidents">Live Incidents</button>
+  </nav>
+</header>
+
+<!-- ── Main layout ────────────────────────────────────────────────────── -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+
+    <!-- ─ Tab: Safety Check ───────────────────────────────────────────── -->
+    <section id="tab-safety-check" class="tab-panel active">
+      <h2>🔍 Safety Check</h2>
+      <label>Destination / Place Name</label>
+      <div class="form-row">
+        <input id="sc-place" type="text" placeholder="e.g. Fort Kochi, Marine Drive, Cherai..." value="Kochi" />
+      </div>
+      <div id="quick-places" class="chip-group" style="margin-top: -4px;">
+        <span class="chip-mini" onclick="setPlace('Fort Kochi')">Fort Kochi</span>
+        <span class="chip-mini" onclick="setPlace('Marine Drive')">Marine Drive</span>
+        <span class="chip-mini" onclick="setPlace('Cherai Beach')">Cherai Beach</span>
+        <span class="chip-mini" onclick="setPlace('Mattancherry')">Mattancherry</span>
+        <span class="chip-mini" onclick="setPlace('Lulu Mall')">Lulu Mall</span>
+      </div>
+      <div class="coords-toggle" style="margin-top: 4px;">
+        <small id="toggle-coords-link" style="color:var(--accent);cursor:pointer;">+ or click map / enter coordinates</small>
+        <div id="coords-inputs" class="form-row hidden" style="margin-top:6px;">
+          <input id="sc-lat" type="number" step="0.0001" placeholder="Latitude" />
+          <input id="sc-lon" type="number" step="0.0001" placeholder="Longitude" />
+        </div>
+      </div>
+      <button id="sc-btn" class="primary-btn" style="margin-top: 4px;">Check Safety</button>
+
+      <div id="sc-result" class="result-box hidden">
+        <h3 id="sc-place-display" style="font-size:0.95rem;color:var(--accent);text-align:center;"></h3>
+        <div id="sc-score-ring" class="score-ring">
+          <span id="sc-score-num">--</span>
+        </div>
+        <div id="sc-label" class="score-label">--</div>
+        <ul id="sc-reasons" class="reasons-list"></ul>
+        <div id="sc-weather" class="weather-row"></div>
+        <div id="sc-freshness" class="meta-text"></div>
+        <div id="sc-confidence" class="meta-text"></div>
+      </div>
+    </section>
+
+    <!-- ─ Tab: Tourist Destinations ────────────────────────────────────────── -->
+    <section id="tab-trip-planner" class="tab-panel">
+      <h2>🗺️ Tourist Destinations</h2>
+      <label>Filter by Interests (optional)</label>
+      <div id="interest-chips" class="chip-group">
+        <label class="chip"><input type="checkbox" value="historical" /> 🏛 Historical</label>
+        <label class="chip"><input type="checkbox" value="beach" /> 🏖 Beach</label>
+        <label class="chip"><input type="checkbox" value="nature" /> 🌿 Nature</label>
+        <label class="chip"><input type="checkbox" value="food" /> 🍛 Food</label>
+        <label class="chip"><input type="checkbox" value="art" /> 🎨 Art</label>
+        <label class="chip"><input type="checkbox" value="spiritual" /> 🕌 Spiritual</label>
+      </div>
+
+      <label>Sort by</label>
+      <select id="tp-sort">
+        <option value="safety">Safety Score (default)</option>
+        <option value="interest">Interest Match</option>
+        <option value="distance">Distance from me</option>
+      </select>
+
+      <label>Your current location (optional)</label>
+      <div class="form-row">
+        <input id="tp-loc-name" type="text" placeholder="e.g. Fort Kochi, Marine Drive, Kakkanad..." />
+      </div>
+      <div class="form-row" style="margin-top:4px;">
+        <input id="tp-lat" type="number" step="0.0001" placeholder="Or Latitude" />
+        <input id="tp-lon" type="number" step="0.0001" placeholder="Or Longitude" />
+      </div>
+      <button id="tp-btn" class="primary-btn">Explore Destinations</button>
+      <button id="tp-my-loc" class="secondary-btn">📍 Detect GPS location</button>
+
+      <div id="tp-results"></div>
+    </section>
+
+    <!-- ─ Tab: Live Incidents ─────────────────────────────────────────── -->
+    <section id="tab-incidents" class="tab-panel">
+      <h2>🚨 Live Incidents</h2>
+      <div class="form-row">
+        <input id="inc-hours" type="number" value="48" min="1" max="168" />
+        <label style="align-self:center"> hours</label>
+      </div>
+      <button id="inc-load-btn" class="primary-btn">Refresh Feed</button>
+      <button id="inc-report-btn" class="secondary-btn">+ Report Incident</button>
+      <div id="inc-feed"></div>
+
+      <!-- Report form (hidden by default) -->
+      <div id="report-form" class="hidden card">
+        <h3>Report an Incident</h3>
+        <select id="rpt-type">
+          <option value="THEFT">Theft</option>
+          <option value="ASSAULT">Assault</option>
+          <option value="HARASSMENT">Harassment</option>
+          <option value="ACCIDENT">Accident</option>
+          <option value="FLOOD">Flood</option>
+          <option value="FIRE">Fire</option>
+          <option value="SCAM">Scam</option>
+          <option value="OTHER">Other</option>
+        </select>
+        <textarea id="rpt-desc" placeholder="Brief description (no personal info)" maxlength="400"></textarea>
+        <div class="form-row">
+          <input id="rpt-lat" type="number" step="0.0001" placeholder="Latitude" />
+          <input id="rpt-lon" type="number" step="0.0001" placeholder="Longitude" />
+        </div>
+        <button id="rpt-submit" class="primary-btn">Submit</button>
+        <button id="rpt-cancel" class="secondary-btn">Cancel</button>
+        <p class="hint">⚠ No personal information is stored or transmitted.</p>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+</div>
+
+<!-- Place detail popup overlay -->
+<div id="place-detail" class="overlay hidden">
+  <div class="overlay-card">
+    <button id="detail-close" class="close-btn">✕</button>
+    <h2 id="detail-name"></h2>
+    <div id="detail-score-wrap">
+      <div id="detail-ring" class="score-ring lg"></div>
+      <div id="detail-label" class="score-label"></div>
+    </div>
+    <h3>Risk Factors</h3>
+    <ul id="detail-reasons" class="reasons-list"></ul>
+    <h3>Best Hours Today</h3>
+    <div id="detail-hours" class="hours-row"></div>
+    <h3>Recent Incidents</h3>
+    <div id="detail-incidents"></div>
+    <p class="hint disclaimer-text" id="detail-disclaimer"></p>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
