@@ -1,5 +1,17 @@
 # Welcome to your Expo app 👋
 
+## Smart Tourist Safety features
+
+The app combines server-backed tourist accounts and IDs with live location
+sharing, emergency contacts and SOS messaging. The Tourist ID profile also
+includes blockchain verification, an emergency directive and a consortium
+block explorer. Sensitive identity details remain on the device; only their
+hashes are used for verification.
+
+Run the app from this directory with `npm start`, `npm run android`,
+`npm run ios` or `npm run web`. Configure the values in `.env.example` in a
+local `.env` file before connecting to the tracker or chatbot services.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started

@@ -25,7 +25,7 @@ const API_BASE_URL = (
   process.env.EXPO_PUBLIC_CHATBOT_API_URL || "http://localhost:8000"
 ).replace(/\/$/, "");
 const GREETING =
-  "Hi! I'm SafeTrip Buddy. Ask me about places, safety or itineraries.";
+  "Hi! I'm SafeTrip Buddy. Ask me about places, food, safety or itineraries, and I'll help plan your trip.";
 const CLIENT_ID_KEY = "safetrip_chat_client_id";
 const CHAT_ID_KEY = "safetrip_chat_id";
 
