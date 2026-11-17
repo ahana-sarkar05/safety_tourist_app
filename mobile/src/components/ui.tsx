@@ -2,7 +2,21 @@ import { ReactNode } from "react";
 import { ScrollView, View, Text, StyleSheet, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../constants/app-theme";
+
+// The peach-to-cream page background used across the app.
+export function PeachBackground({ children, style }: { children?: ReactNode; style?: ViewStyle }) {
+  return (
+    <LinearGradient
+      colors={[theme.colors.bgTop, theme.colors.bg, theme.colors.bg]}
+      locations={[0, 0.45, 1]}
+      style={[{ flex: 1 }, style]}
+    >
+      {children}
+    </LinearGradient>
+  );
+}
 
 export function Screen({
   title,
@@ -15,7 +29,7 @@ export function Screen({
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+    <PeachBackground>
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + 16,
@@ -27,7 +41,7 @@ export function Screen({
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         {children}
       </ScrollView>
-    </View>
+    </PeachBackground>
   );
 }
 
@@ -64,8 +78,9 @@ export function SectionLabel({ children }: { children: string }) {
 const styles = StyleSheet.create({
   title: {
     fontSize: 32,
-    fontWeight: "800",
-    color: theme.colors.ink,
+    fontWeight: "700",
+    fontFamily: theme.fonts.serif,
+    color: theme.colors.heading,
   },
   subtitle: {
     fontSize: 15,

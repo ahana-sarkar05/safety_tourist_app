@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Screen, Card, IconBadge } from "../../components/ui";
-import StopCard from "../../components/stop-card";
-import StopSheet from "../../components/stop-sheet";
-import Suggestions from "../../components/suggestions";
-import { theme } from "../../constants/app-theme";
-import { useLocation } from "../../context/location-context";
-import type { Place } from "../../utils/places";
-import { confirm } from "../../utils/dialog";
+import { Screen, Card, IconBadge } from "../components/ui";
+import StopCard from "../components/stop-card";
+import StopSheet from "../components/stop-sheet";
+import Suggestions from "../components/suggestions";
+import { theme } from "../constants/app-theme";
+import { useLocation } from "../context/location-context";
+import type { Place } from "../utils/places";
+import { confirm } from "../utils/dialog";
 import {
   addDay,
   addStop,
@@ -23,13 +24,20 @@ import {
   updateStop,
   type Itinerary,
   type Stop,
-} from "../../utils/itinerary";
+} from "../utils/itinerary";
 
 // "closed", adding a new stop, or editing an existing one.
 type Sheet = { kind: "closed" } | { kind: "add" } | { kind: "edit"; stopId: string };
 
 export default function ItineraryScreen() {
+  const router = useRouter();
   const { location } = useLocation();
+
+  // Back to wherever we came from, or Home if this page was opened directly.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
 
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -46,7 +54,20 @@ export default function ItineraryScreen() {
   }, []);
 
   if (!itinerary) {
-    return <Screen title="Itinerary" subtitle="Plan your days, tick off your stops">{null}</Screen>;
+    return (
+      <Screen title="Itinerary" subtitle="Plan your days, tick off your stops">
+      <Pressable
+          onPress={goBack}
+          style={styles.back}
+          accessibilityRole="button"
+          accessibilityLabel="Back to home"
+        >
+          <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+          <Text style={styles.backText}>Home</Text>
+        </Pressable>
+
+      </Screen>
+    );
   }
 
   const commit = (next: Itinerary) => {
@@ -127,6 +148,16 @@ export default function ItineraryScreen() {
   return (
     <>
       <Screen title="Itinerary" subtitle="Plan your days, tick off your stops">
+        <Pressable
+          onPress={goBack}
+          style={styles.back}
+          accessibilityRole="button"
+          accessibilityLabel="Back to home"
+        >
+          <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+          <Text style={styles.backText}>Home</Text>
+        </Pressable>
+
         {days.length === 0 ? (
           <Card style={styles.empty}>
             <IconBadge name="calendar" />
@@ -231,8 +262,7 @@ export default function ItineraryScreen() {
           onAdd={addSuggestion}
         />
 
-        {/* room for the floating tab bar */}
-        <View style={{ height: 80 }} />
+        <View style={{ height: 24 }} />
       </Screen>
 
       {sheet.kind !== "closed" && (sheet.kind === "add" || editingStop) && (
@@ -258,6 +288,15 @@ export default function ItineraryScreen() {
 }
 
 const styles = StyleSheet.create({
+  back: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    marginLeft: -4,
+    marginBottom: 8,
+    paddingVertical: 6,
+  },
+  backText: { color: theme.colors.primary, fontWeight: "700", fontSize: 15 },
   empty: { alignItems: "center", paddingVertical: 28, gap: 6 },
   emptyTitle: { fontSize: 20, fontWeight: "800", color: theme.colors.ink, marginTop: 10 },
   emptySub: { color: theme.colors.muted, textAlign: "center", paddingHorizontal: 12 },

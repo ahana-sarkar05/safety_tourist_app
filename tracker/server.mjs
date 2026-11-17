@@ -13,9 +13,20 @@
 import http from "node:http";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import nodePath from "node:path";
+import { fileURLToPath } from "node:url";
+import { createIdentityHandler, DEMO_MODE } from "./identity.mjs";
+import { createRecordsHandler } from "./records.mjs";
+import { createAuthHandler } from "./accounts.mjs";
+import { startAnchoring } from "./anchoring.mjs";
+import { chain } from "./chain.mjs";
 
 const PORT = Number(process.env.PORT ?? 8080);
-const DATA_FILE = process.env.DATA_FILE ?? new URL("./sessions.json", import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: on Windows the latter gives "/C:/..." and
+// the file would silently never be read or written.
+const DATA_FILE =
+  process.env.DATA_FILE ??
+  nodePath.join(nodePath.dirname(fileURLToPath(import.meta.url)), "sessions.json");
 const MAX_DURATION_MIN = 12 * 60;
 const KEEP_AFTER_END_MS = 60 * 60 * 1000; // viewer can still see "ended" for an hour
 const TRAIL_POINTS = 60;
@@ -35,7 +46,9 @@ function saveSoon() {
   if (saveTimer) return;
   saveTimer = setTimeout(() => {
     saveTimer = null;
-    fs.writeFile(DATA_FILE, JSON.stringify([...sessions.values()]), () => {});
+    fs.writeFile(DATA_FILE, JSON.stringify([...sessions.values()]), (err) => {
+      if (err) console.error("Could not save sessions:", err.message);
+    });
   }, 1000);
 }
 
@@ -97,6 +110,13 @@ function authorised(req, session) {
   return given.length === real.length && crypto.timingSafeEqual(given, real);
 }
 
+const clientIp = (req) =>
+  String(req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "").split(",")[0].trim();
+
+const handleIdentity = createIdentityHandler({ json, readBody, clientIp });
+const handleRecords = createRecordsHandler({ json, readBody, clientIp });
+const handleAuth = createAuthHandler({ json, readBody, clientIp });
+
 function baseUrl(req) {
   if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, "");
   const proto = req.headers["x-forwarded-proto"] ?? "http";
@@ -121,7 +141,7 @@ function publicView(s) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://x");
   const path = url.pathname;
-  const ip = String(req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "").split(",")[0].trim();
+  const ip = clientIp(req);
 
   try {
     if (req.method === "GET" && path === "/health") return json(res, 200, { ok: true });
@@ -201,13 +221,40 @@ const server = http.createServer(async (req, res) => {
       return res.end(VIEWER_HTML);
     }
 
+    if (req.method === "GET" && path === "/api/chain") {
+      const a = await chain.isAvailable();
+      return json(res, 200, {
+        configured: chain.configured,
+        available: a.available,
+        reason: a.available ? null : (a.reason ?? chain.reason),
+        contract: chain.contractAddress,
+        chainId: chain.chainId,
+        network: chain.networkName,
+        demoMode: DEMO_MODE,
+      });
+    }
+
+    if (await handleAuth(req, res, path)) return;
+    if (await handleIdentity(req, res, path)) return;
+    if (await handleRecords(req, res, path)) return;
+
     json(res, 404, { error: "Not found" });
   } catch (e) {
     json(res, e.message === "too large" ? 413 : 400, { error: e.message });
   }
 });
 
-server.listen(PORT, () => console.log(`Tracker listening on :${PORT}`));
+server.listen(PORT, async () => {
+  console.log(`Tracker listening on :${PORT}`);
+  const a = await chain.isAvailable();
+  console.log(
+    a.available
+      ? `Blockchain: connected (contract ${chain.contractAddress})`
+      : `Blockchain: NOT connected. ${a.reason ?? chain.reason}\n  Registration still works; fingerprints are anchored automatically once the chain is up.`
+  );
+  if (DEMO_MODE) console.log("DEMO MODE is ON: tamper/restore tools are enabled. Never use this in production.");
+  startAnchoring();
+});
 
 // ---------- the page contacts see ----------
 const VIEWER_HTML = /* html */ `<!doctype html>

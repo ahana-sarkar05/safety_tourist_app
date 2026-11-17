@@ -1,45 +1,63 @@
-# SOS live-location tracker
+# Backend (live location + Digital Tourist ID)
 
-Tiny server (no dependencies, Node 18+) that makes the SOS link *live*.
-An SMS can only carry a snapshot, so the app sends your position here every
-few seconds and your contacts' link shows it on a map until the time you chose
-(default 1 hour) runs out or you tap Stop.
+Small Node server (Node 18+). Run `npm install` once, then:
 
-## Run it
+    npm start          # normal
+    npm run demo       # adds the demo tamper/restore tools
+    npm test           # end-to-end tests (needs the local chain running)
 
-    cd tracker
-    node server.mjs            # listens on :8080 (PORT to change)
+It listens on `:8080` (set `PORT` to change).
 
-Env vars: `PORT`, `PUBLIC_URL` (only needed if the server can't tell its own
-public address), `DATA_FILE` (where sessions are saved, default `sessions.json`).
+## Making it reachable from a phone
 
-## Point the app at it
+Your phone and your contacts must reach this server over **https**.
+For a quick demo use a free tunnel, e.g. `cloudflared tunnel --url http://localhost:8080`,
+and put the address in `mobile/.env` as `EXPO_PUBLIC_TRACKER_URL=...` (no trailing slash).
+For real use deploy it anywhere that runs Node. Free tunnels give a new address each time.
 
-In `mobile/.env`:
+## Environment variables
 
-    EXPO_PUBLIC_TRACKER_URL=https://your-tracker.example.com
-
-It must be reachable from the internet over **https**, because your *contacts*
-open the link, not just your phone. For a quick demo: `ngrok http 8080` and use
-the https URL. For real use, deploy `server.mjs` anywhere that runs Node
-(Render, Railway, Fly, a VPS). Restart the Expo dev server after editing `.env`.
-
-## What it does and doesn't do
-
-- Link = access. The public id is 96 random bits; only the phone holds the
-  secret token needed to push or stop. Anyone with the link can watch until it ends.
-- Sessions auto-end at the chosen time and are deleted an hour later.
-- Capped at 12 h per session, 20 sessions/hour/IP, 60 trail points kept.
-- Sessions are saved to a JSON file so a restart doesn't cut them off. On hosts
-  with an ephemeral disk they will still be lost on redeploy.
-- Single instance only (state is local). Use a database if you need to scale.
+| Variable | Purpose |
+|---|---|
+| `PORT` | listen port (default 8080) |
+| `PUBLIC_URL` | public address, if the server can't work it out |
+| `DATA_FILE`, `IDENTITY_FILE` | where sessions / identities are saved |
+| `DATA_KEY` or `KEY_FILE` | 64-hex-char encryption key (else `secret.key` is created) |
+| `DEPLOYMENT_FILE` | contract deployment (default `../blockchain/deployment.json`) |
+| `CHAIN_RPC_URL`, `CONTRACT_ADDRESS`, `CHAIN_ID` | use a specific chain instead of `deployment.json` |
+| `SIGNUP_LIMIT_PER_HOUR` | sign-ups allowed per hour from one address (default 10; raise for a classroom demo) |
+| `ISSUER_PRIVATE_KEY` | wallet that writes to the contract (required for non-local chains) |
 
 ## API
 
+Live location: `POST /api/sessions`, `PUT /api/sessions/:id/location`, `DELETE /api/sessions/:id`,
+`GET /api/sessions/:id`, `GET /t/:id` (the page contacts open).
+
+Digital Tourist ID (owner calls need `Authorization: Bearer <login token>`; no token gives 401, someone else's token gives 404):
+
 | Method | Path | Who |
 |---|---|---|
-| POST | `/api/sessions` `{lat,lng,accuracy?,durationMin}` | app |
-| PUT | `/api/sessions/:id/location` `{lat,lng,accuracy?,ts}` + `Authorization: Bearer <token>` | app |
-| DELETE | `/api/sessions/:id` + bearer token | app |
-| GET | `/api/sessions/:id` | viewer page |
-| GET | `/t/:id` | contact's browser |
+| POST | `/api/auth/signup` `{fullName, email, password, nationality}` | anyone: creates the account **and** the Tourist ID |
+| POST | `/api/auth/login` `{email, password}` | anyone: returns a login token |
+| POST | `/api/auth/logout` | logged in |
+| GET | `/api/auth/me` | logged in |
+| GET | `/api/identity/:id` | owner |
+| POST | `/api/identity/:id/revoke` | owner |
+| GET | `/api/verify/:id` | **public**: is this ID genuine? |
+| GET / POST | `/api/identity/:id/records` | owner |
+| GET / PUT | `/api/identity/:id/emergency` | owner |
+| GET / POST | `/api/identity/:id/grants` | owner |
+| DELETE | `/api/identity/:id/grants/:grantId` | owner |
+| POST | `/api/emergency/access` `{touristId, code}` | anyone with a valid code |
+| GET | `/api/chain` | blockchain status |
+| POST | `/api/demo/tamper/:id`, `/api/demo/restore/:id` | demo mode only |
+
+## Security notes
+
+* Passwords are stored only as salted scrypt hashes. Login tokens and access codes are stored only as hashes.
+* Wrong password and unknown email give the same answer; 5 wrong passwords lock that login for 10 minutes.
+* Logins last 30 days, work on several devices at once, and can be ended individually.
+* Record contents are encrypted at rest (AES-256-GCM), tied to their tourist ID.
+* Unknown IDs and wrong tokens get the same 404, so IDs can't be probed.
+* 5 wrong emergency codes lock that tourist's emergency access for 15 minutes.
+* `identities.json`, `sessions.json` and `secret.key` hold private data and are git-ignored.

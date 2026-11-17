@@ -47,7 +47,14 @@
         {
           "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts so you can pick emergency contacts from your phonebook."
         }
-      ]
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to scan Tourist ID QR codes."
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
